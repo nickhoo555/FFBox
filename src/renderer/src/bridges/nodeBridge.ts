@@ -206,8 +206,8 @@ export default {
 		window.jsb?.ipcRenderer?.send('openDevTools');
 	},
 
-	startService(): void {
-		window.jsb?.ipcRenderer?.send('startService');
+	startService(): Promise<void> {
+		return window.jsb?.ipcRenderer?.invoke('startService');
 	},
 
 	setBlurBehindWindow(on = true): void {

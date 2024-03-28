@@ -13,9 +13,6 @@ const rendererConfig = path.resolve('config/vite.renderer.ts');
 const query = new URLSearchParams(import.meta.url.split('?')[1]);
 const debug = query.has('debug');
 
-const isMacOS = process.platform === 'darwin';
-const npmExecutablePath = isMacOS ? 'npm' : 'npm.cmd';
-
 // 颜色信息可参考 https://misc.flogisoft.com/bash/tip_colors_and_formatting
 function wrapColor(color, msg) {
 	const colorString = [49, 41, 42, 43, 46, 104][['default', 'red', 'green', 'yellow', 'cyan', 'light blue'].indexOf(color) || 0];

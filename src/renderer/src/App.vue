@@ -14,14 +14,19 @@ import nodeBridge from './bridges/nodeBridge';
 
 const appStore = useAppStore();
 
-onMounted(() => {
+onMounted(async () => {
 	// 初始化本地服务器
-	if (location.href.startsWith('file')) {
-		nodeBridge.startService();
-	}
-	const localServerId = appStore.addServer();
+	const firstServerId = appStore.addServer();
 	if (nodeBridge.env === 'electron') {
-		appStore.initializeServer(localServerId, 'localhost', 33269);
+		// electron 环境自动连接 localhost
+		if (location.href.startsWith('file')) {
+			// 打包后的 electron 环境首先启动 service 再连接
+			nodeBridge.startService().finally(() => {
+				appStore.initializeServer(firstServerId, 'localhost', 33269, 3); // 4 次连接机会
+			});
+		} else {
+			appStore.initializeServer(firstServerId, 'localhost', 33269);
+		}
 	}
 
 	// 挂载退出确认
@@ -72,9 +77,9 @@ onMounted(() => {
 			gp.audio = await nodeBridge.localStorage.get('audio') || gp.audio;
 			gp.output = await nodeBridge.localStorage.get('output') || gp.output;
 
-			appStore.frontendSettings = await nodeBridge.localStorage.get('frontendSettings') || appStore.frontendSettings;
-			appStore.applyFrontendSettings(false);
 		}
+		appStore.frontendSettings = await nodeBridge.localStorage.get('frontendSettings') || appStore.frontendSettings;
+		appStore.applyFrontendSettings(false);
 	})();
 
 	setTimeout(() => {

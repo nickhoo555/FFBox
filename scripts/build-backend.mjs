@@ -9,8 +9,7 @@ const backendConfig = path.resolve('config/vite.backend.ts');
 // const backendConfig = path.join(__dirname, '../config/vite.backend.ts');
 // const backendConfig = require(path.join(__dirname, '../config/vite.backend.ts'));
 
-const isMacOS = process.platform === 'darwin';
-const npmExecutablePath = isMacOS ? 'npm' : 'npm.cmd';
+const npmExecutablePath = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 // 颜色信息可参考 https://misc.flogisoft.com/bash/tip_colors_and_formatting
 function wrapColor(color, msg) {
@@ -55,7 +54,8 @@ async function buildBackend() {
 		configFile: backendConfig,
 		mode: process.env.NODE_ENV === 'development' ? 'development' : 'production',
 	});
-	const buildProcess = spawnSync(npmExecutablePath, ['run', `pkg:backend:${isMacOS ? 'mac' :　'win'}`], { stdio: 'inherit' });
+	const cmdName = process.platform === 'win32' ? 'win' : (process.platform === 'darwin' ? 'mac' : 'linux');
+	const buildProcess = spawnSync(npmExecutablePath, ['run', `pkg:backend:${cmdName}`], { stdio: 'inherit' });
 	// buildProcess.once('exit', process.exit);
 }
 

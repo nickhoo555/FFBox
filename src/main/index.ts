@@ -25,6 +25,7 @@ class ElectronApp {
 	mountAppEvents(): void {
 		// 本程序是启动的第二个实例时，将因获不到锁而退出
 		if (!app.requestSingleInstanceLock()) {
+			console.log('FFBox 已启动，暂不支持启动第二个实例');
 			app.quit();
 			process.exit(0);
 		}
@@ -50,6 +51,13 @@ class ElectronApp {
 			} else {
 				this.createMainWindow();
 			}
+		});
+		app.on('window-all-closed', () => {
+			// FFBoxService 进程尽管没有指定 detached
+			// 但在 macOS 上，主进程退出不会导致 service 退出；在 linux 上，主进程调用了 app.exit() 之后依然会等待 service 退出
+			// 故保险起见主动关闭
+			this.service?.sendSig(9);
+			app.exit();
 		});
 
 		// Set app user model id for windows
@@ -160,11 +168,42 @@ class ElectronApp {
 		// this.electronStore = new ElectronStore();
 	}
 
-	createService(): Promise<void> {
+	async createService(): Promise<void> {
 		this.service = new ProcessInstance();
 		// 目前做不了进程分离，因为启动的时候会瞬间弹一个黑框，十分不优雅。等后期给选项让用户决定行为再去做：https://github.com/nodejs/node/issues/21825
 		// return this.service.start('FFBoxService.exe', [], { detached: true, stdio: 'ignore', windowsHide: true, shell: false });
-		return this.service.start(getOs() === 'Windows' ? 'FFBoxService.exe' : path.join(process.resourcesPath, 'FFBoxService')).then(() => osBridge.sendLoadStatus('service'));
+		let servicePath = '';
+		if (getOs() === 'Windows') {
+			servicePath = 'FFBoxService.exe';
+		} else if (getOs() === 'MacOS') {
+			servicePath = path.join(process.resourcesPath, 'FFBoxService');
+		} else if (getOs() === 'Linux') {
+			// this.mainWindow.webContents.send('debugMessage', 'service 路径', process.execPath, __dirname, __filename, process.cwd(), path.join(process.execPath, '../FFBoxService'));
+			await fs.access('./FFBoxService', fs.constants.X_OK).then((result) => {
+				servicePath = './FFBoxService'; // 通过终端直接执行
+			}).catch(() => {});
+			await fs.access(path.join(process.cwd(), 'FFBoxService'), fs.constants.X_OK).then((result) => {
+				servicePath = path.join(process.cwd(), 'FFBoxService'); // 无沙箱双击执行、通过终端直接执行
+			}).catch(() => {});	
+			await fs.access(path.join(process.execPath, '../FFBoxService'), fs.constants.X_OK).then((result) => {
+				servicePath = path.join(process.execPath, '../FFBoxService'); // AppImage 双击执行（/tmp 目录）、deb 安装后双击执行（/opt/FFBox/）
+			});
+		}
+		// this.mainWindow.webContents.send('debugMessage', '选出路径', servicePath);
+		return new Promise((resolve, reject) => {
+			this.service.start(servicePath).then(() => {
+				// 需要加一点延迟才报告成功，主要是因为 service 启动 server 需要一定时间，待 server 启动好之后才让 renderer 去连接
+				// 在 Windows 中可能不需要加这个延时，但是在 macOS 和 Linux 上似乎都是需要的
+				// 另外，调试过程中发现，如果尝试使用 debugMessage 把调试消息发送给 renderer，当程序忙的时候 renderer 并不一定会按实际顺序去显示，因此需要适当增加延时以验证 Promise 正常工作
+				// 150ms 延迟在 Linux 上很可能不够。但目前的设计是在 renderer 那边自动重试，主进程尽快报告完成。
+				setTimeout(() => {
+					osBridge.sendLoadStatus('service');
+					resolve(undefined);
+				}, 150);
+			}).catch(() => {
+				reject();
+			});
+		});
 	}
 
 	mountIpcEvents(): void {
@@ -251,9 +290,7 @@ class ElectronApp {
 		});
 
 		// 启动一个 ffboxService，这个 ffboxService 目前钦定监听 localhost:33269，而 serviceBridge 会连接此 service
-		ipcMain.on('startService', () => {
-			this.createService();
-		});
+		ipcMain.handle('startService', () => this.createService());
 
 		// osBridge 系列
 		ipcMain.on('triggerSystemMenu', () => osBridge.triggerSystemMenu());

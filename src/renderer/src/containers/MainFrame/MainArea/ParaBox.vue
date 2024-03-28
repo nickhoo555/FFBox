@@ -291,7 +291,7 @@ const getButtonColorStyle = (index: number) => ({ color: appStore.paraSelected =
 					height: 100%;
 					resize: none;
 					color: var(--33);
-					font-family: Consolas,monaco,"黑体","苹方-简","苹方",Roboto;
+					font-family: Consolas,monaco,"Noto Mono","黑体","苹方-简","苹方",Roboto;
 					font-weight: 400;
 					font-size: 12px;
 					line-height: 13px; // 52 / 4

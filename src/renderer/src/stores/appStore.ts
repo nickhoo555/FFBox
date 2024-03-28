@@ -79,7 +79,7 @@ export const useAppStore = defineStore('app', {
 				},
 			},
 			frontendSettings: {
-				colorTheme: 'themeDark',
+				colorTheme: 'themeLight',
 			},
 			showGlobalParams: true,
 			unreadNotificationCount: 0,
@@ -94,7 +94,7 @@ export const useAppStore = defineStore('app', {
 			availablePresets: [],
 			downloadMap: new Map(),
 			machineCode: '',
-			functionLevel: 50,
+			functionLevel: 20,
 		};
 	},
 	getters: {
@@ -111,6 +111,7 @@ export const useAppStore = defineStore('app', {
 		 */
 		addTasks (files: FileList) {
 			function checkAndUploadFile(file: File, id: number) {
+				file.size
 				const reader = new FileReader();
 				reader.readAsBinaryString(file);
 				reader.addEventListener('loadend', () => {
@@ -193,6 +194,15 @@ export const useAppStore = defineStore('app', {
 				setTimeout(() => {	// v2.4 版本开始完全可以不要延时，但是太生硬，所以加个动画
 					console.log('添加任务', file.path);
 					let isRemote = server.entity.ip !== 'localhost';
+					const limitedFileSizeMB = isRemote ? (这.functionLevel >= 60 ? 192 : 127) : Infinity;
+					// 超过约 200MB 的文件在进行 CryptoJS.SHA1 时会导致页面崩溃
+					if (file.size > limitedFileSizeMB * 1000 * 1000) {
+						Popup({
+							message: `${file.name} 文件大小超过 ${limitedFileSizeMB} MB，暂不支持上传操作`,
+							level: 2,
+						});
+						return;
+					}
 					let promise: Promise<number> = 这.addTask(trimExt(file.name), isRemote ? '' : file.path);
 					if (isRemote) {
 						promise.then((id) => {
@@ -555,7 +565,7 @@ export const useAppStore = defineStore('app', {
 		/**
 		 * 初始化服务器连接并挂载事件监听
 		 */
-		initializeServer(serverId: string, ip: string, port: number) {
+		initializeServer(serverId: string, ip: string, port: number, retryCount = 0) {
 			const 这 = useAppStore();
 			const server = 这.servers.find((server) => server.data.id === serverId) as Server;
 			const entity = server.entity;
@@ -613,9 +623,16 @@ export const useAppStore = defineStore('app', {
 				这.pushMsg(`已断开服务器 ${server.data.name} 的连接`, NotificationLevel.warning);
 			});
 			entity.on('error', () => {
-				console.log(`服务器 ${server.entity.ip} 连接出错，建议检查网络连接或防火墙`);
+				if (!retryCount) {
+					console.log(`服务器 ${server.entity.ip} 连接出错，建议检查网络连接或防火墙`);
+					这.pushMsg(`服务器 ${server.data.name} 连接出错，建议检查网络连接或防火墙`, NotificationLevel.error);
+				} else {
+					console.log(`服务器 ${server.entity.ip} 连接失败，剩余重试次数 ${retryCount}`);
+					setTimeout(() => {
+						这.initializeServer(serverId, ip, port, retryCount - 1);
+					}, 150);
+				}
 				destroy();
-				这.pushMsg(`服务器 ${server.data.name} 连接出错，建议检查网络连接或防火墙`, NotificationLevel.error);
 			});
 		},
 		/**

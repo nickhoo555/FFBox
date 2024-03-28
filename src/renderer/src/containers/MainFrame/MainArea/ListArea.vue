@@ -147,9 +147,9 @@ const onDrop = (event: DragEvent) => {	// 此函数触发四次 taskList update�
 					<div style="height: 12px" />
 					<p>1. 在<a @click="handleDownloadFFmpegClicked"> FFmpeg 官网</a>下载适用于 <span>{{ appStore.currentServer.data.os || '对应操作系统' }}</span> 的程序</p>
 					<p v-if="['Windows', 'unknown'].includes(appStore.currentServer.data.os)">　　2.1. 选择一：将 ffmpeg 可执行文件所在路径放至于环境变量中</p>
-					<p v-if="['Windows', 'unknown'].includes(appStore.currentServer.data.os)">　　2.2. 选择二：将 ffmpeg 可执行文件放入 FFBox 可执行程序路径</p>
-					<p v-if="appStore.currentServer.data.os === 'MacOS'">　　2.1. 选择一：将 ffmpeg 可执行文件放入 /usr/local/bin</p>
-					<p v-if="appStore.currentServer.data.os === 'MacOS'">　　2.2. 选择二：将 ffmpeg 可执行文件放入 {{ appStore.currentServer.data.isSandboxed ? 'FFBox.app/Contents/Resources' : 'FFBoxService 可执行程序路径' }}</p>
+					<p v-if="['MacOS', 'Linux'].includes(appStore.currentServer.data.os)">　　2.1. 选择一：将 ffmpeg 可执行文件放入 /usr/local/bin</p>
+					<p v-if="['Windows', 'Linux', 'unknown'].includes(appStore.currentServer.data.os)">　　2.2. 选择二：将 ffmpeg 可执行文件放入 FFBox 可执行程序相同目录</p>
+					<p v-if="appStore.currentServer.data.os === 'MacOS'">　　2.2. 选择二：将 ffmpeg 可执行文件放入 {{ appStore.currentServer.data.isSandboxed ? 'FFBox.app/Contents/Resources' : 'FFBoxService 可执行程序相同目录' }}</p>
 					<div style="height: 4px" />
 					<p>完成以上操作后，重启{{ appStore.currentServer.entity.ip === 'localhost' ? '本软件' : ' FFBoxService ' }}即可开始使用</p>
 					<div style="height: 12px" />

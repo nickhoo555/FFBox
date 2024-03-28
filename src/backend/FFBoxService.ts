@@ -65,12 +65,24 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 	public async initFFmpeg(): Promise<void> {
 		console.log(getTimeString(new Date()), '检查 FFmpeg 路径和版本。');
 		if (process.platform === 'darwin') {
-			await fsPromise.access(path.join(process.execPath, 'ffmpeg'), fs.constants.R_OK).then((result) => {
-				this.ffmpegPath = path.join(process.execPath, 'ffmpeg');
+			await fsPromise.access(path.join(process.execPath, '../ffmpeg'), fs.constants.X_OK).then((result) => {
+				this.ffmpegPath = path.join(process.execPath, '../ffmpeg'); // 【程序目录】沙箱运行模式，service 与 ffmpeg 处在同一层级
 			}).catch(() => {});
-			await fsPromise.access('/usr/local/bin/ffmpeg', fs.constants.R_OK).then((result) => {
-				this.ffmpegPath = '/usr/local/bin/ffmpeg';
+			await fsPromise.access('/usr/local/bin/ffmpeg', fs.constants.X_OK).then((result) => {
+				this.ffmpegPath = '/usr/local/bin/ffmpeg'; // 【系统目录】macOS 只允许用户往 /usr/local/bin/ 放东西（而不能是 /usr/bin/），且此种情况下需要完整路径才能引用
 			}).catch(() => {});
+		}
+		if (process.platform === 'linux') {
+			await fsPromise.access(path.join(process.execPath, '../ffmpeg'), fs.constants.X_OK).then((result) => {
+				// 【程序目录】deb 沙箱运行模式。service 与 ffmpeg 处在同一目录（/opt/FFBox/）
+				this.ffmpegPath = path.join(process.execPath, '../ffmpeg');
+			}).catch(() => {});
+			await fsPromise.access(path.join(process.cwd(), 'ffmpeg'), fs.constants.X_OK).then((result) => {
+				this.ffmpegPath = path.join(process.cwd(), 'ffmpeg'); // 【程序目录】AppImage 沙箱运行模式，读取 .AppImage 同级目录
+			}).catch(() => {});
+			// 【系统目录】Linux 下 /usr/local/bin/ 和 /usr/bin/ 里的东西均能被直接引用，包括终端执行和沙箱执行，因此此处不需要进行处理
+			// console.log('路径', process.execPath, process.cwd(), __dirname, this.ffmpegPath);
+			// this.ffmpegVersion = `路径 ${process.execPath}, ${process.cwd()}, ${__dirname}, ${this.ffmpegPath}`;
 		}
 		const ffmpeg = new FFmpeg(this.ffmpegPath, 1);
 		ffmpeg.on('data', ({ content }) => {

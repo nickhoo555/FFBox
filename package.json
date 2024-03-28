@@ -15,10 +15,14 @@
     "build:backend": "node scripts/build-backend.mjs",
     "pkg:backend:win": "pkg --config ./config/pkg.win.config.json ./app/backend/index.cjs",
     "pkg:backend:mac": "pkg --config ./config/pkg.mac.config.json ./app/backend/index.cjs",
+    "pkg:backend:linux": "pkg --config ./config/pkg.linux.config.json ./app/backend/index.cjs",
     "package": "electron-builder",
     "build:everything": "npm run build:frontend && npm run build:backend && npm run package"
   },
-  "author": "",
+  "author": {
+    "name": "滔滔清风",
+    "email": "ttqf.tech@qq.com"
+  },
   "license": "ISC",
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
