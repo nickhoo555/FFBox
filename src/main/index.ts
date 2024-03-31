@@ -316,10 +316,28 @@ class ElectronApp {
 		  
 		// 读取 LICENSE 文件
 		ipcMain.handle('readLicense', () => {
-			return new Promise((resolve) => {
-				fs.readFile('./LICENSE', { encoding: 'utf-8' }).then((data) => {
+			return new Promise(async (resolve) => {
+				let licensePath = '';
+				if (getOs() === 'Windows') {
+					licensePath = './LICENSE';
+				} else if (getOs() === 'MacOS') {
+					licensePath = path.join(process.resourcesPath, '../LICENSE');
+				} else if (getOs() === 'Linux') {
+					// this.mainWindow.webContents.send('debugMessage', 'service 路径', process.execPath, __dirname, __filename, process.cwd(), path.join(process.execPath, '../FFBoxService'));
+					await fs.access('./LICENSE', fs.constants.R_OK).then((result) => {
+						licensePath = './LICENSE'; // 通过终端直接执行
+					}).catch(() => {});
+					await fs.access(path.join(process.cwd(), 'LICENSE'), fs.constants.R_OK).then((result) => {
+						licensePath = path.join(process.cwd(), 'LICENSE'); // 无沙箱双击执行、通过终端直接执行
+					}).catch(() => {});	
+					await fs.access(path.join(process.execPath, '../LICENSE'), fs.constants.R_OK).then((result) => {
+						licensePath = path.join(process.execPath, '../LICENSE'); // AppImage 双击执行（/tmp 目录）、deb 安装后双击执行（/opt/FFBox/）
+					});
+				}		
+				fs.readFile(licensePath, { encoding: 'utf-8' }).then((data) => {
 					const cipherText = CryptoJS.SHA1(data);
-					if (cipherText.toString() === '4e994ccf17287387cf8bf155ad40f30ad5ca5f38') {
+					if (['c10a2191115c97595e0f0bbb4a127547c9ebb59e', '4e994ccf17287387cf8bf155ad40f30ad5ca5f38'].includes(cipherText.toString())) {
+						// 两个校验码，适配 LF 换行符和 CRLF 换行符
 						resolve(data);
 					} else {
 						resolve(undefined);

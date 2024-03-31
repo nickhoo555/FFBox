@@ -64,7 +64,7 @@ export const useAppStore = defineStore('app', {
 			showMenuCenter: 0,
 			showInfoCenter: false,
 			paraSelected: 1,
-			draggerPos: 0.6,
+			draggerPos: 0.57,
 			taskViewSettings: {
 				showParams: true,
 				showDashboard: true,

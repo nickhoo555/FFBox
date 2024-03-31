@@ -21,6 +21,7 @@
   ],
   "win": {
     "artifactName": "${productName}_${version}.${ext}",
+    "icon": "256.png",
     "target": [
       {
         "target": "dir",
@@ -40,6 +41,7 @@
   },
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
+    "icon": "512.png",
     "target": [
       {
         "target": "dmg",
@@ -54,6 +56,8 @@
     ],
   },
   "linux": {
+    "artifactName": "${productName}_${version}.${ext}",
+    "icon": "256.icns",
     "target": [
       {
         "target": "AppImage",
@@ -64,7 +68,6 @@
         "arch": ["x64"],
       },
     ],
-    "artifactName": "${productName}_${version}.${ext}",
     "extraFiles": [
       {
         "from": "app/backend/index",
