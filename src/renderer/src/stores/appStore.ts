@@ -35,6 +35,7 @@ interface StoreState {
 	},
 	frontendSettings: {
 		colorTheme: string,
+		useIEC: boolean,
 	},
 	showGlobalParams: boolean,
 	unreadNotificationCount: number,
@@ -80,6 +81,7 @@ export const useAppStore = defineStore('app', {
 			},
 			frontendSettings: {
 				colorTheme: 'themeLight',
+				useIEC: false,
 			},
 			showGlobalParams: true,
 			unreadNotificationCount: 0,
@@ -691,6 +693,8 @@ export const useAppStore = defineStore('app', {
 				nodeBridge.setBlurBehindWindow(false);
 			}
 			// document.body.setAttribute('data-color_theme', 这.frontendSettings.colorTheme);
+
+			window.frontendSettings.useIEC = 这.frontendSettings.useIEC;
 		},
 		
 		// #endregion 其他

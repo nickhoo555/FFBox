@@ -71,9 +71,9 @@ const Q: any = {
 
 // #region 预置 slider
 
-function approximation (number: number, numList: number[], threshould = 0.01) {
+function approximation (number: number, numList: number[], threshold = 0.01) {
 	for (const num of numList) {
-		if (Math.abs(num - number) < threshould) {
+		if (Math.abs(num - number) < threshold) {
 			number = num;
 		}
 	}
@@ -90,81 +90,80 @@ const H264265crfSlider: SliderOptions = {
 		[0.529, '24（中画质）'],
 		[0.647, '18（高画质）'],
 		[0.765, '12（肉眼无损）'],
-		[1.000, '0（无损）']
+		[1.000, '0（最高画质）'],
 	]),
-	valueToText: function (value) {
-		return String(51 - Math.round(value * 51));
-	},
-	valueProcess: function (value) {
+	default: 0.4510, // 23
+	valueToText: { min: 51, max: 0, type: 'integer' },
+	valueProcess: (value) => {
 		return Math.round(value * 51) / 51;
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return 51 - Math.round(value * 51);
-	}
+	},
 }
 const crf63slider: SliderOptions = {
 	step: 63,
 	tags: new Map([
 		[0.000, '63（最低画质）'],
-		[1.000, '0（无损）']
+		[1.000, '0（最高画质）'],
 	]),
-	valueToText: function (value) {
-		return String(63 - Math.round(value * 63));
-	},
-	valueProcess: function (value) {
+	default: 0.3651, // 23
+	valueToText: { min: 63, max: 0, type: 'integer' },
+	valueProcess: (value) => {
 		return Math.round(value * 63) / 63;
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return 63 - Math.round(value * 63);
-	}
+	},
 }
 const crf51slider: SliderOptions = {
 	step: 51,
 	tags: new Map([
 		[0.000, '51（最低画质）'],
-		[1.000, '0（无损）']
+		[0.411, '30（低画质）'],
+		[0.529, '24（中画质）'],
+		[0.647, '18（高画质）'],
+		[0.765, '12（肉眼无损）'],
+		[1.000, '0（自动）'],
 	]),
-	valueToText: function (value) {
-		return String(51 - Math.round(value * 51));
-	},
-	valueProcess: function (value) {
+	default: 0.4510, // 23
+	valueToText: { min: 51, max: 0, type: 'integer' },
+	valueProcess: (value) => {
 		return Math.round(value * 51) / 51;
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return 51 - Math.round(value * 51);
-	}
+	},
 }
 const qp70slider: SliderOptions = {
 	step: 70,
 	tags: new Map([
 		[0.000, '70（最低画质）'],
-		[1.000, '0（无损）']
+		[1.000, '0（最高画质）'],
 	]),
-	valueToText: function (value) {
-		return String(70 - Math.round(value * 70));
-	},
-	valueProcess: function (value) {
+	default: 0.4286, // 30
+	valueToText: { min: 70, max: 0, type: 'integer' },
+	valueProcess: (value) => {
 		return Math.round(value * 70) / 70;
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return 70 - Math.round(value * 70);
-	}
+	},
 }
 const qp51slider: SliderOptions = {
 	step: 51,
 	tags: new Map([
 		[0.000, '51（最低画质）'],
-		[1.000, '0（无损）']
+		[1.000, '0（最高画质）'],
 	]),
-	valueToText: function (value) {
-		return String(51 - Math.round(value * 51));
-	},
-	valueProcess: function (value) {
+	default: 0.4510, // 23
+	valueToText: { min: 51, max: 0, type: 'integer' },
+	valueProcess: (value) => {
 		return Math.round(value * 51) / 51;
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return 51 - Math.round(value * 51);
-	}
+	},
 }
 const vbitrateSlider: SliderOptions = {
 	step: 0,
@@ -173,40 +172,33 @@ const vbitrateSlider: SliderOptions = {
 		[0.250, '500 Kbps'],
 		[0.500, '4 Mbps'],
 		[0.750, '32 Mbps'],
-		[1.000, '256 Mbps']
+		[1.000, '256 Mbps'],
 	]),
-	valueToText: function (value) {
-		var kbps = Math.round(62.5 * Math.pow(2, value * 12))
-		if (kbps >= 10000) {
-			return (kbps / 1000).toFixed(1) + ' Mbps'
-		} else {
-			return kbps + ' kbps'
-		}
-	},
-	valueProcess: function (value) {
+	default: 0.5,
+	valueToText: { min: 62500, power: 12, type: 'bitrate' },
+	valueProcess: (value) => {
 		return approximation(value,
 			[0, 0.0833, 0.1667, 0.25, 0.3333, 0.4167, 0.5, 0.5833, 0.6667, 0.75, 0.8333, 0.9167, 1]);
 		//	 62.5k 125k  250k   500k    1M      2M     4M    8M      16M    32M    64M   128M  256M
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return Math.round(62.5 * Math.pow(2, value * 12)) + "k"
-	}
+	},
 }
 const q100slider: SliderOptions = {
 	step: 0,
 	tags: new Map([
 		[0.000, '0'],
-		[1.000, '100']
+		[1.000, '100'],
 	]),
-	valueToText: function (value) {
-		return (value * 100).toFixed(0)
+	default: 0.5,
+	valueToText: { min: 0, max: 100, type: 'integer' },
+	valueProcess: (value) => {
+		return Math.round(value * 100) / 100;
 	},
-	valueProcess: function (value) {
-		return Math.round(value * 100) / 100
+	valueToParam: (value: number) => {
+		return (value * 100).toFixed(0);
 	},
-	valueToParam: function (value) {
-		return (value * 100).toFixed(0)
-	}
 }
 const H264265presetSlider: SliderOptions = {
 	step: 9,
@@ -222,17 +214,22 @@ const H264265presetSlider: SliderOptions = {
 		[8 / 9, 'veryslow'],
 		[9 / 9, 'placebo'],
 	]),
-	valueToText: function (value) {
-		value = Math.round(value * 9)
-		return ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'][value]
-	},
+	default: 'medium',
+	valueToText: (value: string) => value,
 	valueProcess: function (value) {
-		return Math.round(value * 9) / 9
+		return Math.round(value * 9) / 9;
 	},
-	valueToParam: function (value) {
-		value = Math.round(value * 9)
-		return ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'][value]
-	}
+	valueToParam: (value) => value,
+	stringToNumber: (value) => {
+		return [0 / 9, 1 / 9, 2 / 9, 3 / 9, 4 / 9, 5 / 9, 6 / 9, 7 / 9, 8 / 9, 9 / 9][
+			['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'].indexOf(value)
+		];
+	},
+	numberToParam: (value) => {
+		return ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow', 'placebo'][
+			[0 / 9, 1 / 9, 2 / 9, 3 / 9, 4 / 9, 5 / 9, 6 / 9, 7 / 9, 8 / 9, 9 / 9].indexOf(value)
+		];
+	},
 }
 const qsvPresetSlider: SliderOptions = {
 	step: 6,
@@ -245,17 +242,22 @@ const qsvPresetSlider: SliderOptions = {
 		[5 / 6, 'slower'],
 		[6 / 6, 'veryslow'],
 	]),
-	valueToText: function (value) {
-		value = Math.round(value * 6)
-		return ['veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'][value]
-	},
+	default: 'medium',
+	valueToText: (value: string) => value,
 	valueProcess: function (value) {
 		return Math.round(value * 6) / 6
 	},
-	valueToParam: function (value) {
-		value = Math.round(value * 6)
-		return ['veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'][value]
-	}
+	valueToParam: (value) => value,
+	stringToNumber: (value) => {
+		return [0 / 6, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 6 / 6][
+			['veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'].indexOf(value)
+		];
+	},
+	numberToParam: (value) => {
+		return ['veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'][
+			[0 / 6, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 6 / 6].indexOf(value)
+		];
+	},
 }
 
 // #endregion
@@ -1210,7 +1212,7 @@ const vcodecs: VCodec[] = [
 				],
 				ratecontrol: [
 					{
-						...CRF, cmd: ['-cq', VALUE],
+						...CRF, cmd: ['-rc', 'vbr', '-cq', VALUE],
 						...crf51slider
 					},
 					{
@@ -1242,17 +1244,22 @@ const vcodecs: VCodec[] = [
 							[1 / 2, 'balanced'],
 							[2 / 2, 'quality'],
 						]),
-						valueToText: function (value) {
-							value = Math.round(value * 2)
-							return ['speed', 'balanced', 'quality'][value]
+						default: 'balanced',
+						valueToText: (value: string) => value,
+						valueProcess: (value) => {
+							return Math.round(value * 2) / 2;
 						},
-						valueProcess: function (value) {
-							return Math.round(value * 2) / 2
+						valueToParam: (value) => value,
+						stringToNumber: (value) => {
+							return [0 / 2, 1 / 2, 2 / 2][
+								['speed', 'balanced', 'quality'].indexOf(value)
+							];
 						},
-						valueToParam: function (value) {
-							value = Math.round(value * 2)
-							return ['speed', 'balanced', 'quality'][value]
-						}
+						numberToParam: (value) => {
+							return ['speed', 'balanced', 'quality'][
+								[0 / 2, 1 / 2, 2 / 2].indexOf(value)
+							];
+						},
 					},
 					{
 						mode: "combo", parameter: "tune", display: "编码倾重",
@@ -1536,7 +1543,7 @@ const vcodecs: VCodec[] = [
 				],
 				ratecontrol: [
 					{
-						...CRF, cmd: ['-cq', VALUE],
+						...CRF, cmd: ['-rc', 'vbr', '-cq', VALUE],
 						...crf51slider
 					},
 					{
@@ -1568,17 +1575,22 @@ const vcodecs: VCodec[] = [
 							[1 / 2, 'balanced'],
 							[2 / 2, 'quality'],
 						]),
-						valueToText: function (value) {
-							value = Math.round(value * 2)
-							return ['speed', 'balanced', 'quality'][value]
+						default: 'balanced',
+						valueToText: (value: string) => value,
+						valueProcess: (value) => {
+							return Math.round(value * 2) / 2;
 						},
-						valueProcess: function (value) {
-							return Math.round(value * 2) / 2
+						valueToParam: (value) => value,
+						stringToNumber: (value) => {
+							return [0 / 2, 1 / 2, 2 / 2][
+								['speed', 'balanced', 'quality'].indexOf(value)
+							];
 						},
-						valueToParam: function (value) {
-							value = Math.round(value * 2) / 2
-							return ['speed', 'balanced', 'quality'][value]
-						}
+						numberToParam: (value) => {
+							return ['speed', 'balanced', 'quality'][
+								[0 / 2, 1 / 2, 2 / 2].indexOf(value)
+							];
+						},
 					},
 					{
 						mode: "combo", parameter: "tune", display: "编码倾重",
@@ -1731,24 +1743,29 @@ const vcodecs: VCodec[] = [
 				...默认编码器,
 				parameters: [
 					{
-						mode: "slider", parameter: "quality", display: "编码质量",
+						mode: "slider", parameter: "preset", display: "编码质量",
 						step: 2,
 						tags: new Map([
 							[0 / 2, 'realtime'],
 							[1 / 2, 'good'],
 							[2 / 2, 'best'],
 						]),
-						valueToText: function (value) {
-							value = Math.round(value * 2)
-							return ['realtime', 'good', 'best'][value]
+						default: 'balanced',
+						valueToText: (value: string) => value,
+						valueProcess: (value) => {
+							return Math.round(value * 2) / 2;
 						},
-						valueProcess: function (value) {
-							return Math.round(value * 2) / 2
+						valueToParam: (value) => value,
+						stringToNumber: (value) => {
+							return [0 / 2, 1 / 2, 2 / 2][
+								['realtime', 'good', 'best'].indexOf(value)
+							];
 						},
-						valueToParam: function (value) {
-							value = Math.round(value * 2)
-							return ['realtime', 'good', 'best'][value]
-						}
+						numberToParam: (value) => {
+							return ['realtime', 'good', 'best'][
+								[0 / 2, 1 / 2, 2 / 2].indexOf(value)
+							];
+						},
 					},
 					{
 						mode: "combo", parameter: "pix_fmt", display: "像素格式",
@@ -1774,24 +1791,29 @@ const vcodecs: VCodec[] = [
 				codecName: 'libvpx-vp9',		
 				parameters: [
 					{
-						mode: "slider", parameter: "quality", display: "编码质量",
+						mode: "slider", parameter: "preset", display: "编码质量",
 						step: 2,
 						tags: new Map([
 							[0 / 2, 'realtime'],
 							[1 / 2, 'good'],
 							[2 / 2, 'best'],
 						]),
-						valueToText: function (value) {
-							value = Math.round(value * 2)
-							return ['realtime', 'good', 'best'][value]
+						default: 'balanced',
+						valueToText: (value: string) => value,
+						valueProcess: (value) => {
+							return Math.round(value * 2) / 2;
 						},
-						valueProcess: function (value) {
-							return Math.round(value * 2) / 2
+						valueToParam: (value) => value,
+						stringToNumber: (value) => {
+							return [0 / 2, 1 / 2, 2 / 2][
+								['realtime', 'good', 'best'].indexOf(value)
+							];
 						},
-						valueToParam: function (value) {
-							value = Math.round(value * 2)
-							return ['realtime', 'good', 'best'][value]
-						}
+						numberToParam: (value) => {
+							return ['realtime', 'good', 'best'][
+								[0 / 2, 1 / 2, 2 / 2].indexOf(value)
+							];
+						},
 					},
 					{
 						mode: "combo", parameter: "pix_fmt", display: "像素格式",
@@ -1822,24 +1844,29 @@ const vcodecs: VCodec[] = [
 				...默认编码器,
 				parameters: [
 					{
-						mode: "slider", parameter: "quality", display: "编码质量",
+						mode: "slider", parameter: "preset", display: "编码质量",
 						step: 2,
 						tags: new Map([
 							[0 / 2, 'realtime'],
 							[1 / 2, 'good'],
 							[2 / 2, 'best'],
 						]),
-						valueToText: function (value) {
-							value = Math.round(value * 2)
-							return ['realtime', 'good', 'best'][value]
+						default: 'balanced',
+						valueToText: (value: string) => value,
+						valueProcess: (value) => {
+							return Math.round(value * 2) / 2;
 						},
-						valueProcess: function (value) {
-							return Math.round(value * 2) / 2
+						valueToParam: (value) => value,
+						stringToNumber: (value) => {
+							return [0 / 2, 1 / 2, 2 / 2][
+								['realtime', 'good', 'best'].indexOf(value)
+							];
 						},
-						valueToParam: function (value) {
-							value = Math.round(value * 2) / 2
-							return ['realtime', 'good', 'best'][value]
-						}
+						numberToParam: (value) => {
+							return ['realtime', 'good', 'best'][
+								[0 / 2, 1 / 2, 2 / 2].indexOf(value)
+							];
+						},
 					},
 					{
 						mode: "combo", parameter: "pix_fmt", display: "像素格式",
@@ -1865,24 +1892,29 @@ const vcodecs: VCodec[] = [
 				codecName: 'libvpx',		
 				parameters: [
 					{
-						mode: "slider", parameter: "quality", display: "编码质量",
+						mode: "slider", parameter: "preset", display: "编码质量",
 						step: 2,
 						tags: new Map([
 							[0 / 2, 'realtime'],
 							[1 / 2, 'good'],
 							[2 / 2, 'best'],
 						]),
-						valueToText: function (value) {
-							value = Math.round(value * 2)
-							return ['realtime', 'good', 'best'][value]
+						default: 'balanced',
+						valueToText: (value: string) => value,
+						valueProcess: (value) => {
+							return Math.round(value * 2) / 2;
 						},
-						valueProcess: function (value) {
-							return Math.round(value * 2) / 2
+						valueToParam: (value) => value,
+						stringToNumber: (value) => {
+							return [0 / 2, 1 / 2, 2 / 2][
+								['realtime', 'good', 'best'].indexOf(value)
+							];
 						},
-						valueToParam: function (value) {
-							value = Math.round(value * 2) / 2
-							return ['realtime', 'good', 'best'][value]
-						}
+						numberToParam: (value) => {
+							return ['realtime', 'good', 'best'][
+								[0 / 2, 1 / 2, 2 / 2].indexOf(value)
+							];
+						},
 					},
 					{
 						mode: "combo", parameter: "pix_fmt", display: "像素格式",
@@ -2545,39 +2577,67 @@ const generator = {
 	},
 	// 获取 ratecontrol 方面的参数，主要是给 taskitem 用
 	getRateControlParam: function (videoParams: OutputParams_video) {
-		var ret = {
+		let ret = {
 			mode: '-',
 			value: '-'
-		}
+		};
 		if (videoParams.vcodec == '禁用视频' || videoParams.vcodec == '不重新编码' || videoParams.vcodec == '自动') {
-			return ret
+			return ret;
 		} else {
-			var vcodec = vcodecs.find((item) => {
-				return item.value == videoParams.vcodec
-			})
+			const vcodec = vcodecs.find((item) => {
+				return item.value == videoParams.vcodec;
+			});
 			if (!vcodec) {
-				return ret
+				return ret;
 			}
-			var vencoder = vcodec.encoders.find((item) => {
-				return item.value == videoParams.vencoder
-			})
+			const vencoder = vcodec.encoders.find((item) => {
+				return item.value == videoParams.vencoder;
+			});
 			if (!vencoder || vencoder.ratecontrol == null) {
-				return ret
+				return ret;
 			}
 			// 找到 ratecontrol 参数
-			var ratecontrol = vencoder.ratecontrol.find((item) => {
+			const ratecontrol = vencoder.ratecontrol.find((item) => {
 				return item.value == videoParams.ratecontrol
 			})
 			if (ratecontrol != null) {
 				// 计算值
-				var floatValue = videoParams.ratevalue
-				var value = ratecontrol.valueToText(floatValue)
+				const floatValue = videoParams.ratevalue;
+				const value = (() => {
+					const vtt = ratecontrol.valueToText;
+					if (vtt instanceof Function) {
+						return vtt(floatValue);
+					} else {
+						if (vtt.type === 'bitrate') {
+							const bps = Math.round(vtt.min * 2 ** ((floatValue as number) * vtt.power));
+							if (window.frontendSettings.useIEC) {
+								if (bps >= 10 * 1024 ** 2) {
+									return (bps / 1024 ** 2).toFixed(1) + ' Mibps';
+								} else {
+									return (bps / 1024).toFixed(0) + ' kibps';
+								}
+							} else {
+								if (bps >= 10 * 1000 ** 2) {
+									return (bps / 1000 ** 2).toFixed(1) + ' Mbps';
+								} else {
+									return (bps / 1000).toFixed(0) + ' kbps';
+								}
+							}
+						} else if (vtt.type === 'integer') {
+							const range = vtt.max - vtt.min;
+							return (vtt.min + range * (floatValue as number)).toFixed(0);
+						} else {
+							const range = vtt.max - vtt.min;
+							return String(vtt.min + range * (floatValue as number));
+						}
+					}
+				})();
 				ret = {
 					mode: ratecontrol.value,
 					value
-				}
+				};
 			}
-			return ret
+			return ret;
 		}
 	}
 }

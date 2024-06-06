@@ -41,10 +41,21 @@ export const TaskItem: FunctionalComponent<Props> = (props) => {
 	const beforeBitrateFilter = (kbps: number) => {
 		if (isNaN(kbps)) {
 			return '读取中';
-		} else if (kbps >= 10000) {
-			return (kbps / 1000).toFixed(1) + ' Mbps';
 		} else {
-			return kbps + ' kbps';
+			const bps = kbps * 1000;
+			if (window.frontendSettings.useIEC) {
+				if (bps >= 10 * 1024 ** 2) {
+					return (bps / 1024 ** 2).toFixed(1) + ' Mibps';
+				} else {
+					return (bps / 1024).toFixed(0) + ' kibps';
+				}
+			} else {
+				if (bps >= 10 * 1000 ** 2) {
+					return (bps / 1000 ** 2).toFixed(1) + ' Mbps';
+				} else {
+					return (bps / 1000).toFixed(0) + ' kbps';
+				}
+			}
 		}
 	};
 	const durationBefore = computed(() => stringifyTimeValue(task.before.duration));
@@ -62,10 +73,19 @@ export const TaskItem: FunctionalComponent<Props> = (props) => {
 	// #region 仪表盘
 
 	const graphBitrateFilter = (kbps: number) => {
-		if (kbps >= 10000) {
-			return (kbps / 1000).toFixed(1) + ' M';
+		const bps = kbps * 1000;
+		if (window.frontendSettings.useIEC) {
+			if (bps >= 10 * 1024 ** 2) {
+				return (bps / 1024 ** 2).toFixed(1) + ' M';
+			} else {
+				return (bps / 1024 ** 2).toFixed(2) + ' M';
+			}
 		} else {
-			return (kbps / 1000).toFixed(2) + ' M';
+			if (bps >= 10 * 1000 ** 2) {
+				return (bps / 1000 ** 2).toFixed(1) + ' M';
+			} else {
+				return (bps / 1000 ** 2).toFixed(2) + ' M';
+			}
 		}
 	};
 	const graphBitrate = computed(() => graphBitrateFilter(task.dashboard_smooth.bitrate));
@@ -97,27 +117,57 @@ export const TaskItem: FunctionalComponent<Props> = (props) => {
 		const remainTime = (totalDuration - task.dashboard_smooth.time) / totalDuration * needTime;	// 剩余进度比例 * 全进度耗时
 		return timeFilter(remainTime);
 	});
-	const graphSizeFilter = (kb: number) => {
-		if (kb >= 1000000) {
-			return (kb / 1000000).toFixed(2) + ' GB';
-		} else if (kb >= 100000) {
-			return (kb / 1000).toFixed(0) + ' MB';
-		} else if (kb >= 10000) {
-			return (kb / 1000).toFixed(1) + ' MB';
+	const graphSizeFilter = (kB: number) => {
+		const B = kB * 1000;
+		if (window.frontendSettings.useIEC) {
+			if (B >= 10 * 1024 ** 3) {
+				return (B / 1024 ** 3).toFixed(1) + ' GiB';
+			} else if (B >= 1024 ** 3) {
+				return (B / 1024 ** 3).toFixed(2) + ' GiB';
+			} else if (B >= 100 * 1024 ** 2) {
+				return (B / 1024 ** 2).toFixed(0) + ' MiB';
+			} else if (B >= 10 * 1024 ** 2) {
+				return (B / 1024 ** 2).toFixed(1) + ' MiB';
+			} else {
+				return (B / 1024 ** 2).toFixed(2) + ' MiB';
+			}
 		} else {
-			return (kb / 1000).toFixed(2) + ' MB';
+			if (B >= 10 * 1000 ** 3) {
+				return (B / 1000 ** 3).toFixed(1) + ' GB';
+			} else if (B >= 1000 ** 3) {
+				return (B / 1000 ** 3).toFixed(2) + ' GB';
+			} else if (B >= 100 * 1000 ** 2) {
+				return (B / 1000 ** 2).toFixed(0) + ' MB';
+			} else if (B >= 10 * 1000 ** 2) {
+				return (B / 1000 ** 2).toFixed(1) + ' MB';
+			} else {
+				return (B / 1000 ** 2).toFixed(2) + ' MB';
+			}
 		}
 	};
 	const graphSize = computed(() => graphSizeFilter(task.dashboard_smooth.size));
-	const transferSpeedFilter = (KBps: number) => {
-		if (KBps >= 100000) {
-			return (KBps / 1000).toFixed(0) + ' MB';
-		} else if (KBps >= 10000) {
-			return (KBps / 1000).toFixed(1) + ' MB';
-		} else if (KBps >= 1000) {
-			return (KBps / 1000).toFixed(2) + ' MB';
+	const transferSpeedFilter = (kBps: number) => {
+		const Bps = kBps * 1000;
+		if (window.frontendSettings.useIEC) {
+			if (Bps >= 100 * 1024 ** 2) {
+				return (Bps / 1024 ** 2).toFixed(0) + ' MiB';
+			} else if (Bps >= 10 * 1024 ** 2) {
+				return (Bps / 1024 ** 2).toFixed(1) + ' MiB';
+			} else if (Bps >= 1024 ** 2) {
+				return (Bps / 1024 ** 2).toFixed(2) + ' MiB';
+			} else {
+				return (Bps / 1024).toFixed(0) + ' KiB';
+			}
 		} else {
-			return KBps.toFixed(0) + ' KB';
+			if (Bps >= 100 * 1000 ** 2) {
+				return (Bps / 1000 ** 2).toFixed(0) + ' MB';
+			} else if (Bps >= 10 * 1000 ** 2) {
+				return (Bps / 1000 ** 2).toFixed(1) + ' MB';
+			} else if (Bps >= 1000 ** 2) {
+				return (Bps / 1000 ** 2).toFixed(2) + ' MB';
+			} else {
+				return (Bps / 1000).toFixed(0) + ' KB';
+			}
 		}
 	};
 	const graphTransferSpeed = computed(() => transferSpeedFilter(task.dashboard_smooth.transferSpeed));
@@ -414,7 +464,7 @@ export const TaskItem: FunctionalComponent<Props> = (props) => {
 										<div class={style.roundGraphItem}>
 											<div class={style.ring} style={graphTransferSpeedStyle.value}></div>
 											<span class={style.data}>{ graphTransferSpeed.value }</span>
-											<span class={style.description}>传输速度</span>
+											<span class={style.description}>传输秒速</span>
 										</div>
 										<div class={style.textItem}>
 											<span class={style.data}>{graphTransferred.value}</span>

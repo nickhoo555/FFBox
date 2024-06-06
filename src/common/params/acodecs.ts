@@ -66,15 +66,14 @@ const abitrateSlider: SliderOptions = {
 		[0.833, '256 Kbps'],
 		[1.000, '512 Kbps']
 	]),
-	valueToText: function (value) {
-		return Math.round(8 * Math.pow(2, value * 6)) + " kbps"
-	},
-	valueProcess: function (value) {
+	default: 0.5,
+	valueToText: { min: 8000, power: 6, type: 'bitrate' },
+	valueProcess: (value) => {
 		return approximation(value,
 				[0, 0.0975, 0.1667, 0.2642, 0.3333, 0.3870, 0.4308, 0.5, 0.5537, 0.5975, 0.6667, 0.7203, 0.7642, 0.8333, 0.8870, 0.9308, 1]);
 			//	 8    12      16      24      32      40      48     64    80      96      128     160     192     256     320     384  512
 	},
-	valueToParam: function (value) {
+	valueToParam: (value: number) => {
 		return Math.round(8 * Math.pow(2, value * 6)) + "k"
 	}
 }
@@ -82,17 +81,16 @@ const q100slider: SliderOptions = {
 	step: 0,
 	tags: new Map([
 		[0.000, '0'],
-		[1.000, '100']
+		[1.000, '100'],
 	]),
-	valueToText: function (value) {
-		return (value * 100).toFixed(0)
+	default: 0.5,
+	valueToText: { min: 0, max: 100, type: 'integer' },
+	valueProcess: (value) => {
+		return Math.round(value * 100) / 100;
 	},
-	valueProcess: function (value) {
-		return Math.round(value * 100) / 100
+	valueToParam: (value: number) => {
+		return (value * 100).toFixed(0);
 	},
-	valueToParam: function (value) {
-		return (value * 100).toFixed(0)
-	}
 }
 
 // #endregion
@@ -405,22 +403,23 @@ const volSlider: SliderOptions = {
 		[0.875, '+36 dB'],
 		[1.000, '+48 dB'],
 	]),
-	valueToText: function (value) {
-		value *= 96
+	default: 0.5,
+	valueToText: (value: number) => {
+		value *= 96;
 		if (value > 48) {
-			return '+ ' + (value - 48) + ' dB'
+			return '+ ' + (value - 48) + ' dB';
 		} else {
-			return (value - 48) + ' dB'
+			return (value - 48) + ' dB';
 		}
 	},
-	valueProcess: function (value) {
+	valueProcess: (value) => {
 		value = Math.round(value * 96) / 96
 		return approximation(value,
 				[0.000, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000]);
 	},
-	valueToParam: function (value) {
-		value = value * 96 - 48
-		return Math.round(256 * Math.pow(10, (value) / 20))
+	valueToParam: (value: number) => {
+		value = value * 96 - 48;
+		return Math.round(256 * Math.pow(10, (value) / 20));
 	}
 }
 
@@ -1352,39 +1351,67 @@ const generator = {
 	},
 	// 获取 ratecontrol 方面的参数，主要是给 taskitem 用
 	getRateControlParam: function (audioParams: OutputParams_audio) {
-		var ret = {
+		let ret = {
 			mode: '-',
 			value: '-'
-		}
+		};
 		if (audioParams.acodec == '禁用音频' || audioParams.acodec == '不重新编码' || audioParams.acodec == '自动') {
-			return ret
+			return ret;
 		} else {
-			var acodec = acodecs.find((item) => {
-				return item.value == audioParams.acodec
-			})
+			const acodec = acodecs.find((item) => {
+				return item.value == audioParams.acodec;
+			});
 			if (!acodec) {
-				return ret
+				return ret;
 			}
-			var aencoder = acodec.encoders.find((item) => {
-				return item.value == audioParams.aencoder
-			})
+			const aencoder = acodec.encoders.find((item) => {
+				return item.value == audioParams.aencoder;
+			});
 			if (!aencoder || aencoder.ratecontrol == null) {
-				return ret
+				return ret;
 			}
 			// 找到 ratecontrol 参数
-			var ratecontrol = aencoder.ratecontrol.find((item) => {
+			const ratecontrol = aencoder.ratecontrol.find((item) => {
 				return item.value == audioParams.ratecontrol
 			})
 			if (ratecontrol != null) {
 				// 计算值
-				var floatValue = audioParams.ratevalue
-				var value = ratecontrol.valueToText(floatValue)
+				const floatValue = audioParams.ratevalue;
+				const value = (() => {
+					const vtt = ratecontrol.valueToText;
+					if (vtt instanceof Function) {
+						return vtt(floatValue);
+					} else {
+						if (vtt.type === 'bitrate') {
+							const bps = Math.round(vtt.min * 2 ** ((floatValue as number) * vtt.power));
+							if (window.frontendSettings.useIEC) {
+								if (bps >= 10 * 1024 ** 2) {
+									return (bps / 1024 ** 2).toFixed(1) + ' Mibps';
+								} else {
+									return (bps / 1024).toFixed(0) + ' kibps';
+								}
+							} else {
+								if (bps >= 10 * 1000 ** 2) {
+									return (bps / 1000 ** 2).toFixed(1) + ' Mbps';
+								} else {
+									return (bps / 1000).toFixed(0) + ' kbps';
+								}
+							}
+						} else if (vtt.type === 'integer') {
+							const range = vtt.max - vtt.min;
+							return (vtt.min + range * (floatValue as number)).toFixed(0);
+						} else {
+							const range = vtt.max - vtt.min;
+							return String(vtt.min + range * (floatValue as number));
+						}
+					}
+				})();
 				ret = {
 					mode: ratecontrol.value,
 					value
-				}
+				};
 			}
-			return ret
+			return ret;
 		}
 	}
 }

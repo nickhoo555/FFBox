@@ -64,7 +64,8 @@ const VcodecView: FunctionalComponent<Props> = (props) => {
 			tags: slider.tags,
 			valueToText: slider.valueToText,
 			valueProcess: slider.valueProcess,
-			valueToParam: slider.valueToParam
+			valueToParam: slider.valueToParam,
+			stringToNumber: slider.stringToNumber,
 		};
 	});
 	const parametersList = computed(() => {
@@ -86,18 +87,13 @@ const VcodecView: FunctionalComponent<Props> = (props) => {
 			// 更改 vcodec 或 vencoder 后检查子组件的设置
 			for (const parameter of parametersList.value) {
 				if (parameter.mode === 'combo') {
-					const index = parameter.items.findIndex((item) => item.value == appStore.globalParams.video.detail[parameter.parameter]);
-					if (index == -1) {
-						console.log(`参数 ${parameter.parameter} 与列表数据不匹配，重置为默认值`);
-						appStore.globalParams.video.detail[parameter.parameter] = parameter.items[0].value;
-						appStore.applyParameters();
-					}
+					console.log(`参数 ${parameter.parameter} 重置为默认值或首项`);
+					appStore.globalParams.video.detail[parameter.parameter] = parameter.default ?? parameter.items[0].value;
+					appStore.applyParameters();
 				} else if (parameter.mode == 'slider') {
-					if (isNaN(appStore.globalParams.video.detail[parameter.parameter])) {
-						console.log(`参数 ${parameter.parameter} 类型不为数字，重置为 0.5`);
-						appStore.globalParams.video.detail[parameter.parameter] = 0.5;
-						appStore.applyParameters();
-					}
+					console.log(`参数 ${parameter.parameter} 重置为默认值或 0.5`);
+					appStore.globalParams.video.detail[parameter.parameter] = parameter.default ?? 0.5;
+					appStore.applyParameters();
 				}
 			}
 		}
@@ -141,6 +137,8 @@ const VcodecView: FunctionalComponent<Props> = (props) => {
 									step={parameter.step}
 									valueToText={parameter.valueToText}
 									valueProcess={parameter.valueProcess}
+									stringToNumber={parameter.stringToNumber}
+									numberToParam={parameter.numberToParam}
 									onChange={(value: number) => handleDetailChange(parameter.parameter, value)}
 								/>
 							);

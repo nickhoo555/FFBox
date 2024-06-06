@@ -56,6 +56,7 @@ onMounted(async () => {
 	});
 
 	// 初始化或加载配置
+	window.frontendSettings = {};
 	appStore.loadPresetList();
 	(async () => {
 		const gp = appStore.globalParams;

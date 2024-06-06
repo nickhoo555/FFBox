@@ -5,8 +5,8 @@ import { useAppStore } from '@renderer/stores/appStore';
 const appStore = useAppStore();
 
 const dataRadixList: RadioListProps['list'] = [
-	{ value: '1000 进制 (SI)', disabled: true },
-	{ value: '1024 进制 (IEC)', disabled: true },
+	{ value: false, caption: '1000 进制 (SI)' },
+	{ value: true, caption: '1024 进制 (IEC)' },
 ];
 const colorThemeList: RadioListProps['list'] = [
 	{ value: 'themeLight', caption: '浅色' },
@@ -17,8 +17,8 @@ const progressModeList: RadioListProps['list'] = [
 	{ value: 'ffmpeg 真实值', disabled: true },
 ];
 
-const handleSettingChange = (key: 'colorTheme', value: any) => {
-	appStore.frontendSettings[key] = value;
+const handleSettingChange = (key: keyof typeof appStore.frontendSettings, value: any) => {
+	(appStore.frontendSettings[key] as any) = value;
 	appStore.applyFrontendSettings(true);
 };
 
@@ -28,7 +28,7 @@ const handleSettingChange = (key: 'colorTheme', value: any) => {
 	<div>
 		<div class="localSettings">
 			<span>数据量进制和词头</span>
-			<RadioList :list="dataRadixList" value="1000 进制 (SI)" />
+			<RadioList :list="dataRadixList" :value="appStore.frontendSettings.useIEC" @change="(value) => handleSettingChange('useIEC', value)" />
 			<span>颜色主题</span>
 			<RadioList :list="colorThemeList" :value="appStore.frontendSettings.colorTheme" @change="(value) => handleSettingChange('colorTheme', value)" />
 			<span>进度显示模式</span>

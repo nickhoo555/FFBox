@@ -1,22 +1,63 @@
 <script setup lang="ts">
-import { ref, VNodeRef } from 'vue';
+import { computed, ref, VNodeRef } from 'vue';
+import type { SliderOptions } from '@common/params/types';
 import { useAppStore } from '@renderer/stores/appStore';
 
 const appStore = useAppStore();
 
 interface Props {
 	title: string;
-	value: number;
+	value: number | string;
 	tags?: [number, string][] | Map<number, string>;
 	step?: number;
-	valueToText: (value: number) => string;
-	valueProcess?: (value?: number) => number;
-	onChange?: (value: number) => any;
+	valueToText: SliderOptions['valueToText'];
+	valueProcess?: SliderOptions['valueProcess'];
+	stringToNumber?: SliderOptions['stringToNumber'];
+	numberToParam?: SliderOptions['numberToParam'];	// 若指定 numberToParam，Slider 将认为 value 是字符串类型。使用滑块操作时，返回值将通过此函数计算出
+	onChange?: (value: number | string) => any;
 }
 
 const props = defineProps<Props>();
 
+// 如果 props.value 是字符串，那么此处将其转换为对应值（如果有）
+const convertedValue = computed(() => {
+	if (typeof props.value === 'string') {
+		return props.stringToNumber(props.value);
+	} else {
+		return props.value;
+	}
+})
+
 const slipperRef = ref<VNodeRef>(null);
+
+const valueToTextConverter = (setting: Props['valueToText'], value: string | number) => {
+	if (setting instanceof Function) {
+		return setting(value);
+	} else {
+		if (setting.type === 'bitrate') {
+			const bps = Math.round(setting.min * 2 ** ((value as number) * setting.power));
+			if (window.frontendSettings.useIEC) {
+				if (bps >= 10 * 1024 ** 2) {
+					return (bps / 1024 ** 2).toFixed(1) + ' Mibps';
+				} else {
+					return (bps / 1024).toFixed(0) + ' kibps';
+				}
+			} else {
+				if (bps >= 10 * 1000 ** 2) {
+					return (bps / 1000 ** 2).toFixed(1) + ' Mbps';
+				} else {
+					return (bps / 1000).toFixed(0) + ' kbps';
+				}
+			}
+		} else if (setting.type === 'integer') {
+			const range = setting.max - setting.min;
+			return (setting.min + range * (value as number)).toFixed(0);
+		} else {
+			const range = setting.max - setting.min;
+			return String(setting.min + range * (value as number));
+		}
+	}
+}
 
 const handleDragStart = (event: MouseEvent | TouchEvent) => {
 	event.preventDefault();
@@ -43,7 +84,8 @@ const handleDragStart = (event: MouseEvent | TouchEvent) => {
 		}
 		value = props.valueProcess ? props.valueProcess(value) : value;
 		if (value != lastValue) {
-			(props.onChange || (() => {}))(value);
+			const emitValue = props.numberToParam ? props.numberToParam(value) : value;
+			(props.onChange || (() => {}))(emitValue);
 			lastValue = value;
 		}
 	}
@@ -70,7 +112,7 @@ const handleKeypress = (event: KeyboardEvent) => {
 		} else {
 			delta = 0.01;
 		}
-		sum = props.value + direction * delta;
+		sum = (convertedValue.value !== undefined ? convertedValue.value : 0.5) + direction * delta;
 		if (sum < 0) {
 			sum = 0;
 		} else if (sum > 1) {
@@ -87,11 +129,11 @@ const handleKeypress = (event: KeyboardEvent) => {
 		<div class="slider-title">{{ props.title }}</div>
 		<div class="slider-module" @mousedown="handleDragStart">
 			<div class="slider-module-track"></div>
-			<div class="slider-module-track-background" :style="{ width: props.value * 100 + '%' }"></div>
+			<div class="slider-module-track-background" :style="{ width: convertedValue * 100 + '%' }"></div>
 			<span v-for="(tag, index) in tags" :key="index" class="slider-module-mark" :style="{ left: tag[0] * 100 + '%' }">{{ tag[1] }}</span>
-			<button class="slider-module-slipper" v-bind:style="{ left: props.value * 100 + '%' }" ref="slipperRef" @keydown="handleKeypress" :aria-label="title + '滑块'"></button>
+			<button class="slider-module-slipper" v-bind:style="{ left: convertedValue * 100 + '%' }" ref="slipperRef" @keydown="handleKeypress" :aria-label="title + '滑块'"></button>
 		</div>
-		<div class="slider-text">{{ valueToText(value) }}</div>
+		<div class="slider-text">{{ valueToTextConverter(props.valueToText, value) }}</div>
 	</div>
 </template>
 

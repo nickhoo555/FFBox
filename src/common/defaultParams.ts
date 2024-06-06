@@ -16,7 +16,7 @@ export const defaultParams: OutputParams = {
 		ratecontrol: 'CRF',
 		ratevalue: 0.5,
 		detail: {
-			preset: 0.5,
+			preset: 'medium',
 			tune: '默认',
 			profile: '自动',
 			level: '自动',

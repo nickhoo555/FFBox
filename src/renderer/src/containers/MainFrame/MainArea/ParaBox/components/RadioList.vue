@@ -65,7 +65,7 @@ const handleConfirm = (item: Props['list'][number], value: string, index: number
 			<span
 				v-if="editingIndex !== index || item.caption"
 				@click="handleLabelClick(item, index)"
-				:style="item.value ? {} : { opacity: 0.5 }"
+				:style="item.value !== '' ? {} : { opacity: 0.5 }"
 			>
 				{{ item.caption || (item.value === '' ? placeholder : item.value) }}
 			</span>
