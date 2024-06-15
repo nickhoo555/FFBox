@@ -92,7 +92,7 @@ const handleReconnectClicked = async () => {
 				</Transition>
 			</div>
 			<!-- 正常区域 -->
-			<ListArea v-if="!loginBoxVisible" />
+			<ListArea v-if="!loginBoxVisible && appStore.currentServer" />
 			<!-- 掉线区域 -->
 			<div class="disconnectArea" v-if="isDisconnected">
 				<Transition name="bganimate" appear>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import nodeBridge from '@renderer/bridges/nodeBridge';
 import { useAppStore } from '@renderer/stores/appStore';
 import Popup from '@renderer/components/Popup/Popup';
@@ -133,7 +133,8 @@ const onDrop = (event: DragEvent) => {	// 此函数触发四次 taskList update�
 				:id="task.id"
 				:selected="appStore.selectedTask.has(task.id)"
 				@click="handleTaskClicked($event, task.id, index)"
-				@pause-or-remove="appStore.pauseNremove(task.id)"/>
+				@pause-or-remove="appStore.pauseNremove(task.id)"
+			/>
 		</div>
 		<div v-if="hasFFmpeg" class="dropfilesdiv" @click="appStore.selectedTask = new Set()">
 			<div class="dropfilesimage" @click="debugLauncher" :class="dragging ? 'imgDragging' : 'imgNormal'" />

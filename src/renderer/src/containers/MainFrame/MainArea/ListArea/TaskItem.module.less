@@ -209,21 +209,14 @@
 			display: inline-flex;
 			flex-direction: column;
 			justify-content: space-between;
-			width: 180px;
+			width: 120px;
 			height: 60px;
-			margin: 6px 12px;
+			margin: 6px 8px;
 			.linearGraphItem {
 				position: relative;
-				width: 180px;
+				width: 120px;
 				height: 30px;
 				transform: translateY(3px);
-				.line {
-					position: absolute;
-					left: 40px;
-					top: 13px;
-					height: 4px;
-					width: calc(100% - 40px - 80px);
-				}
 				.data {
 					position: absolute;
 					right: 0;
@@ -338,8 +331,9 @@
 					border: none;
 					background: hwb(var(--bg96) / 0.6);
 					outline: none;
-					width: calc(100% - 4px);
-					height: calc(100% - 4px);
+					box-sizing: border-box;
+					width: 100%;
+					height: 100%;
 					resize: none;
 					color: var(--33);
 					font-family: Consolas,monaco,"Noto Mono","黑体","苹方-简","苹方",Roboto;

@@ -1,6 +1,6 @@
 {
   "name": "FFBox",
-  "version": "4.0.0",
+  "version": "4.1.0-alpha",
   "description": "",
   "main": "app/main/index.cjs",
   "scripts": {
@@ -59,7 +59,7 @@
     "koa-static": "^5.0.0",
     "path-browserify": "^1.0.1",
     "pinia": "^2.0.29",
-    "vue": "^3.3",
+    "vue": "^3.4",
     "ws": "^8.13.0"
   }
 }
