@@ -1,20 +1,24 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, useCssModule } from 'vue';
 import CryptoJS from 'crypto-js';
 import { NotificationLevel } from '@common/types';
+import { ServiceBridgeStatus } from "@renderer/bridges/serviceBridge";
 import nodeBridge from '@renderer/bridges/nodeBridge';
 import { useAppStore } from '@renderer/stores/appStore';
 import Button, { ButtonType } from '@renderer/components/Button/Button';
 import IconGithub from '@renderer/assets/menuCenter/sponsorCenter/github.svg?component';
 import IconGitee from '@renderer/assets/menuCenter/sponsorCenter/gitee.svg?component';
 import IconKoFi from '@renderer/assets/menuCenter/sponsorCenter/ko-fi.svg?component';
+import IconAfdian from '@renderer/assets/menuCenter/sponsorCenter/afdian.png';
 import ImageAlipay from '@renderer/assets/menuCenter/sponsorCenter/alipay.png';
 import ImageWechatpay from '@renderer/assets/menuCenter/sponsorCenter/wechatpay.svg?url';
 import ImageQQpay from '@renderer/assets/menuCenter/sponsorCenter/qqpay.png';
 import Popup from '@renderer/components/Popup/Popup';
 import Inputbox from '@renderer/containers/MainFrame/MainArea/ParaBox/components/Inputbox.vue';
+import Tooltip from '@renderer/components/Tooltip/Tooltip';
 
 const appStore = useAppStore();
+const style = useCssModule();
 
 const qr_alipayredenvelop = ref<HTMLCanvasElement>();
 const qr_alipay = ref<HTMLCanvasElement>();
@@ -35,6 +39,7 @@ const envelopStyle = computed(() => {
 const jumpToGithub = () => nodeBridge.jumpToUrl('https://github.com/ttqftech/FFBox');
 const jumpToGitee = () => nodeBridge.jumpToUrl('https://gitee.com/ttqf/FFBox');
 const jumpToKoFi = () => nodeBridge.jumpToUrl('https://ko-fi.com/N4N26F2WR');
+const jumpToAfdian = () => nodeBridge.jumpToUrl('https://afdian.net/a/ttqftech');
 
 // 传入 HexEditor 从第一个像素开始的内容，需要 4 位灰度色 bmp，反向行序
 // 传入二维码大小
@@ -98,7 +103,7 @@ const handleEnvelopMouseDown = (event: MouseEvent) => {
 		event.preventDefault();
 	} else if (event.button === 0 && envelopNum.value > -1) {
 		// 左键结束计数并激活
-		const machineCode = appStore.machineCode;
+		const machineCode = appStore.localServer?.data.machineId || '';
 		const fixedCode = 'd324c697ebfc42b7';
 		const key = machineCode + fixedCode;
 		const min = CryptoJS.enc.Utf8.parse(envelopNum.value + '');
@@ -129,6 +134,12 @@ const handleActivateButtonClick = () => {
 	}
 };
 
+const handleElementHover = (e: MouseEvent, content: string) => {
+	const rect = e.target.getBoundingClientRect();
+	Tooltip.show({ content: content, style: { top: `${rect.top + rect.height}px`, right: `${window.innerWidth - rect.right}px` }, class: style.smallTip });
+	// Tooltip.show({ content: content, style: { top: `${e.pageY}px`, right: `${window.innerWidth - e.pageX}px` }, class: style.smallTip });
+};
+
 onMounted(() => {
 	paintQRcode2canvas(qr_alipayredenvelop.value, alipayRedEnvelopQR());
 	paintQRcode2canvas(qr_alipay.value, alipayQR());
@@ -143,18 +154,29 @@ onMounted(() => {
 		<p>开发者想要你来 GitHub / Gitee 点个星～</p>
 		<p>（或者提点建议也行，比如如何让下面这些花花绿绿的二维码没那么丑🤪</p>
 		<div class="paragram">
-			<Button @click="jumpToGithub"><IconGithub />GitHub</Button>
-			<Button @click="jumpToGitee"><IconGitee />Gitee</Button>
+			<Button @click="jumpToGithub" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '如果你打不开，那就努力再尝试！反复尝试！尝试到国家都为你而感动！')">
+				<IconGithub />GitHub
+			</Button>
+			<Button @click="jumpToGitee" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '这个是备用哒～')">
+				<IconGitee />Gitee
+			</Button>
 		</div>
-		<p>下面这个按钮就不是免费的，除非你想请我喝奶茶🧋</p>
+		<p>如果你不只是想给我送⭐，还想送我奶茶🧋，那么可以点下面两个按钮～</p>
 		<div class="paragram">
-			<Button @click="jumpToKoFi"><IconKoFi />Ko-Fi</Button>
+			<Button @click="jumpToKoFi" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '一直都没人点这个，我是不是该考虑把它撤了🤔')">
+				<IconKoFi />Ko-Fi
+			</Button>
+			<Button @click="jumpToAfdian" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '这个似乎更适合中国宝宝的体质❤️～')">
+				<img :src="IconAfdian" />爱发电
+			</Button>
 		</div>
 		<p>🍲赛博红包来咯~</p>
 		<div class="paragram">
 			<div
 				class="QRscreen QRscreen-alipayredenvelop"
 				:style="envelopStyle"
+				@mouseleave="Tooltip.hide()"
+				@mouseenter="handleElementHover($event, '支付宝每隔一段时间就会搞活动把这个红包变大，只要它不改链接，红包二维码就一直能用～')"
 				@mousedown="handleEnvelopMouseDown"
 				@mouseup="() => envelopPressed = false"
 			>
@@ -170,7 +192,7 @@ onMounted(() => {
 		</div>
 		<p>如果还想把我喂胖，扫下面几个🐴也行 _(:з」∠)_（只要你喜欢</p>
 		<div class="paragram">
-			<div class="QRscreen QRscreen-alipay">
+			<div class="QRscreen QRscreen-alipay" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '（你有没有发现，我把支付宝跟微信支付的标语互换了👀')">
 				<div class="QRuppertext">推荐使用<strong>支付宝</strong></div>
 				<div class="QRbox">
 					<canvas ref="qr_alipay"></canvas>
@@ -180,7 +202,7 @@ onMounted(() => {
 					<img :src="ImageAlipay">
 				</div>
 			</div>
-			<div class="QRscreen QRscreen-wechatpay">
+			<div class="QRscreen QRscreen-wechatpay" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '（你有没有发现，我把支付宝跟微信支付的标语互换了👀')">
 				<div class="QRuppertext">支付就用微信支付</div>
 				<div class="QRbox">
 					<canvas ref="qr_wechatpay"></canvas>
@@ -190,7 +212,7 @@ onMounted(() => {
 					<img :src="ImageWechatpay">
 				</div>
 			</div>
-			<div class="QRscreen QRscreen-qqpay">
+			<div class="QRscreen QRscreen-qqpay" @mouseleave="Tooltip.hide()" @mouseenter="handleElementHover($event, '听说好多人不用 QQ 支付的原因是要实名？🤔')">
 				<div class="QRuppertext">QQ 支付</div>
 				<div class="QRbox">
 					<canvas ref="qr_qqpay"></canvas>
@@ -202,11 +224,13 @@ onMounted(() => {
 			</div>
 		</div>
 		<h2>激活软件</h2>
-		<p>FFBox 是一款试用、有源、捐赠混合的软件。因此，作者为其设计了一个简单的激活系统，您可以通过多种途径激活本软件。</p>
-		<p style="color: #777; font-style: italic;">特别强调，是“多种途径”哦~</p>
-		<Inputbox style="margin: 0" title="激活码" :long="true" @change="(value) => activateCode = value" />
-		<Button @click="handleActivateButtonClick">激活</Button>
-		<p>机器码：<span style="user-select: all;">{{ appStore.machineCode }}</span></p>
+		<p>FFBox 是一款试用、有源、捐赠混合的软件。出厂状况下，本软件存在部分功能的使用限制</p>
+		<p>您可以通过激活码去除这些限制，详情请到官网或官方信息发布平台查询～</p>
+		<Inputbox :disabled="appStore.localServer?.entity.status !== ServiceBridgeStatus.Connected" style="margin: 0" title="激活码" :long="true" @change="(value) => activateCode = value" />
+		<Button :disabled="appStore.localServer?.entity.status !== ServiceBridgeStatus.Connected" @click="handleActivateButtonClick">激活</Button>
+		<p>机器码：<span style="user-select: all;">
+			{{ appStore.localServer?.entity.status === ServiceBridgeStatus.Connected ? (appStore.localServer.data.machineId ?? '（服务器版本不匹配，无法读取）') : '（未连接，请连接本地服务器后获取）' }}
+		</span></p>
 	</div>
 </template>
 
@@ -217,7 +241,7 @@ onMounted(() => {
 		flex-wrap: wrap;
 		margin-bottom: 24px;
 		&>button {
-			svg {
+			svg, img {
 				width: 20px;
 				height: 20px;
 				vertical-align: -4px;
@@ -309,5 +333,26 @@ onMounted(() => {
 		font-size: 20px;
 		margin: 2em 0 1em;
 		color: var(--titleText);
+	}
+</style>
+
+<style module lang="less">
+	.smallTip {
+		:global .tooltip-box {
+			position: relative;
+			top: -1px;
+			padding: 6px 10px;
+			border-radius: 8px;
+			border: none;
+			background-color: hwb(var(--hoverLightBg) / 0.5);
+			backdrop-filter: blur(8px) contrast(110%);
+			box-shadow: 0 0 1px 0.5px hwb(var(--hoverLightBg)),
+						0 1.5px 4px 0 hwb(var(--hoverShadow) / 0.2),
+						0 1px 0.5px 0px hwb(var(--highlight) / 0.5) inset;	// 上高光
+			.tooltip-message {
+				font-size: 12px;
+				line-height: 16px;
+			}
+		}
 	}
 </style>

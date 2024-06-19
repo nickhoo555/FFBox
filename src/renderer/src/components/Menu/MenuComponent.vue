@@ -266,8 +266,8 @@ const showTooltip = (menuItem: MenuItem) => {
 			};
 		}
 		Tooltip.show({
-			text: menuItem.tooltip,
-			position,
+			content: menuItem.tooltip,
+			style: position,
 		});
 	}
 }

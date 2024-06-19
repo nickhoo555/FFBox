@@ -1,4 +1,4 @@
-import { computed, defineComponent, defineProps, FunctionalComponent, onBeforeUnmount, ref, Transition, VNodeRef, watch, onUnmounted, toRef } from 'vue'; // defineComponent 的主要功能是提供类型检查
+import { computed, defineComponent, defineProps, FunctionalComponent, onBeforeUnmount, ref, Transition, VNodeRef, watch, onUnmounted, toRef, onMounted, StyleValue } from 'vue'; // defineComponent 的主要功能是提供类型检查
 import { TaskStatus, TransferStatus } from '@common/types';
 import { UITask } from '@renderer/types'
 import { generator as vGenerator } from '@common/params/vcodecs';
@@ -16,6 +16,7 @@ interface Props {
 	task: UITask;
 	id: number;
 	selected?: boolean;
+	shouldHandleHover?: boolean;	// 如果正在多选，或者单选但选的不是自己，那么不响应悬浮
 	onClick?: (event: MouseEvent) => any;
 	onDblClick?: (event: MouseEvent) => any;
 	onPauseOrRemove?: () => any;
@@ -27,9 +28,7 @@ export const TaskItem = defineComponent((props: Props) => {
 
 	// #region 预先计算以减少下方计算量
 
-	const outputDuration = computed(() => {
-		return getOutputDuration(props.task);
-	});
+	const outputDuration = computed(() => getOutputDuration(props.task));
 
 	// #endregion
 
@@ -201,18 +200,30 @@ export const TaskItem = defineComponent((props: Props) => {
 	const showDashboard = computed(() => [TaskStatus.TASK_RUNNING, TaskStatus.TASK_PAUSED, TaskStatus.TASK_STOPPING].includes(props.task.status) || props.task.transferStatus !== TransferStatus.normal);
 	const dashboardType = computed(() => showDashboard ? (props.task.transferStatus !== TransferStatus.normal ? 'transfer' : 'convert') : 'none');
 
-	const taskNameWidth = computed(() => {
-		let shrinkSpace = 80;
-		shrinkSpace += [0, 13 + 96, 13 + 96 + 14 + 120 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.audio)];
-		shrinkSpace += [0, 13 + 96, 13 + 96 + 14 + 120 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.video)];
-		shrinkSpace += [0, 13 + 88, 13 + 88 + 14 + 88 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.smpte)];
-		shrinkSpace += [0, 13 + 36, 13 + 36 + 14 + 36 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.format)];
-		shrinkSpace += [0, 13 + 64, 13 + 64 + 14 + 64 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.duration)];
-		if (showDashboard.value) {
-			shrinkSpace = Math.max(shrinkSpace, 784);
-		}
-		return `max(calc(100% - ${shrinkSpace}px), 64px)`;
-	});
+	const taskNameStyle = computed(() => {
+		const width = (() => {
+			if (windowWidth.value >= 920) {
+				let shrinkSpace = 80;
+				shrinkSpace += [0, 13 + 96, 13 + 96 + 14 + 120 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.audio)];
+				shrinkSpace += [0, 13 + 96, 13 + 96 + 14 + 120 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.video)];
+				shrinkSpace += [0, 13 + 88, 13 + 88 + 14 + 88 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.smpte)];
+				shrinkSpace += [0, 13 + 36, 13 + 36 + 14 + 36 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.format)];
+				shrinkSpace += [0, 13 + 64, 13 + 64 + 14 + 64 ][['none', 'input', 'all'].indexOf(settings.paramsVisibility.duration)];
+				if (showDashboard.value) {
+					shrinkSpace = Math.max(shrinkSpace, 720);
+				}
+				return `max(calc(100% - ${shrinkSpace}px), 64px)`;
+			} else {
+				return 'calc(100% - 188px)';
+			}
+		})();
+		return {
+			...(showDashboard.value && windowWidth.value >= 920 ? {} : { maxHeight: '26px', '-webkit-line-clamp': 1 }),
+			width,
+			...(!showDashboard.value ? { fontSize: '16px' } : {}),	// 不显示 dashboard 时不允许文字放大
+			...(props.shouldHandleHover ? { pointerEvents: 'all' } : undefined),
+		};
+	}) as any;
 
 	const deleteButtonBackgroundPositionX = computed(() => {
 		switch (props.task.status) {
@@ -253,10 +264,12 @@ export const TaskItem = defineComponent((props: Props) => {
 
 	// #endregion
 
-	const cmdRef = ref<VNodeRef>(null);
+	// #region 体验优化
+
+	const cmdRef = ref<HTMLTextAreaElement>(null);
 	const cmdText = computed(() => settings.cmdDisplay === 'input' ? ['ffmpeg', ...props.task.paraArray].join(' ') : props.task.cmdData);
 	watch(() => props.task.cmdData, () => {
-		const elem = cmdRef.value as Element;
+		const elem = cmdRef.value;
 		if (elem) {
 			const scrollBottom = elem?.scrollTop + elem.getBoundingClientRect().height;
 			if (elem.scrollHeight - scrollBottom < 1) {
@@ -267,7 +280,7 @@ export const TaskItem = defineComponent((props: Props) => {
 		}
 	});
 	watch(() => settings.cmdDisplay, (value) => {
-		const elem = cmdRef.value as Element;
+		const elem = cmdRef.value;
 		if (value === 'output' && elem) {
 			setTimeout(() => {
 				elem.scrollTo(0, Number.MAX_SAFE_INTEGER);
@@ -275,21 +288,27 @@ export const TaskItem = defineComponent((props: Props) => {
 		}
 	})
 
+	const taskNameRef = ref<HTMLDivElement>(null);
+	const paramAreaRef = ref<HTMLDivElement>(null);
 	// 监听窗口宽度变化
-	// const windowWidth = ref(0);
-	// const windowWidthListener = ref<() => void>(() => {
-	// 	console.log('宽度变化', window.innerWidth);
-	// 	windowWidth.value = window.innerWidth;
-	// });
-	// watch(() => windowWidthListener.value, () => {
-	// 	console.log('ref 变化');
-	// })
+	const windowWidth = ref(0);
+	const windowWidthListener = ref<() => void>(() => {
+		windowWidth.value = window.innerWidth;
+	});
+	onMounted(() => {
+		window.addEventListener('resize', windowWidthListener.value);
+	});
+	onBeforeUnmount(() => {
+		window.removeEventListener('resize', windowWidthListener.value);
+	});
 
-	const handleMouseEnter = (event: MouseEvent) => {
+	// #endregion
+
+	const handleTaskMouseEnter = (event: MouseEvent) => {
 		if (props.task.status === TaskStatus.TASK_FINISHED) {
 			Tooltip.show({
-				text: `双击以${appStore.currentServer.entity.ip === 'localhost' ? '打开' : '下载'}输出文件`,
-				position: {
+				content: `双击以${appStore.currentServer.entity.ip === 'localhost' ? '打开' : '下载'}输出文件`,
+				style: {
 					right: `calc(100vw - ${event.pageX}px)`,
 					top: `${event.pageY}px`,
 				},
@@ -318,7 +337,31 @@ export const TaskItem = defineComponent((props: Props) => {
 		}
 	};
 
-	// #region 预先计算以减少下方计算量
+	const handleParaAreaMouseEnter = (event: MouseEvent) => {
+		const paramAreaPos = paramAreaRef.value.getBoundingClientRect();
+		const position = window.innerWidth >= 920 ? { right: `${Math.min(window.innerWidth - event.pageX, window.innerWidth - 400)}px`, top: `${paramAreaPos.top}px` } : { right: '48px', top: `${paramAreaPos.top}px` };
+		Tooltip.show({
+			content: <span>
+				时长：{durationBefore.value} → {durationAfter.value}<br />
+				容器：{props.task.before.format} → {props.task.after.output.format}<br />
+				规格：{smpteBefore.value} → {props.task.after.video.resolution}@{props.task.after.video.framerate}<br />
+				视频：{props.task.before.vcodec}{videoInputBitrate.value} → {props.task.after.video.vcodec}{videoRateControl.value}<br />
+				音频：{props.task.before.acodec}{audioInputBitrate.value} → {props.task.after.audio.acodec}{audioRateControl.value}<br />
+			</span>,
+			style: position,
+			class: style.paraAreaTip,
+		});
+	};
+
+	const handleTaskNameMouseEnter = (event: MouseEvent) => {
+		const taskNamePos = taskNameRef.value.getBoundingClientRect();
+		const position = { left: `44px`, top: `${taskNamePos.top}px`, maxWidth: `calc(100% - 88px)` };
+		Tooltip.show({
+			content: props.task.fileBaseName ?? '读取中',
+			style: position,
+			class: style.taskNameTip,
+		});
+	};
 
 	return () => (
 		<div class={style.taskWrapper1} onClick={props.onClick}>
@@ -327,7 +370,7 @@ export const TaskItem = defineComponent((props: Props) => {
 					class={style.task}
 					style={{ height: `${taskHeight.value}px` }}
 					data-color_theme={appStore.frontendSettings.colorTheme}
-					onMouseenter={handleMouseEnter}
+					onMouseenter={handleTaskMouseEnter}
 					onMouseleave={() => Tooltip.hide()}
 					onDblclick={handleTaskDblClicked}
 				>
@@ -342,78 +385,93 @@ export const TaskItem = defineComponent((props: Props) => {
 					</div>
 					<div
 						class={style.taskName}
-						style={{
-							...(showDashboard.value ? {} : { maxHeight: '26px', '-webkit-line-clamp': 1 }),
-							width: taskNameWidth.value,
-							...(!showDashboard.value ? { fontSize: '16px' } : {}),	// 不显示 dashboard 时不允许文字放大
-						}}
+						style={taskNameStyle.value}
+						ref={taskNameRef}
+						onMouseenter={handleTaskNameMouseEnter}
+						onMouseleave={() => Tooltip.hide()}
 					>
 						{props.task.fileBaseName ?? '读取中'}
 					</div>
 					{settings.showParams && (
-						<div class={style.paraArea}>
-							{/* 时间 */}
-							<div class={style.divider}><div></div></div>
-							<div class={style.durationBefore}>{durationBefore.value}</div>
-							{settings.paramsVisibility.duration === 'all' && (
+						<div
+							class={style.paraArea}
+							style={{ maxWidth: windowWidth.value >= 920 ? 'calc(100% - 128px)' : 'calc(0% + 120px)', pointerEvents: props.shouldHandleHover ? 'all' : undefined }}
+							ref={paramAreaRef}
+							onMouseenter={handleParaAreaMouseEnter}
+							onMouseleave={() => Tooltip.hide()}
+						>
+							{windowWidth.value >= 920 ? (
 								<>
-									<div class={style.durationTo}><IconRightArrow /></div>
-									<div class={style.durationAfter}>{durationAfter.value}</div>
-								</>
-							)}
-							{/* 容器 */}
-							<div class={style.divider}><div></div></div>
-							<div class={style.formatBefore}>{props.task.before.format}</div>
-							{settings.paramsVisibility.format === 'all' && (
-								<>
-									<div class={style.formatTo}><IconRightArrow /></div>
-									<div class={style.formatAfter}>{props.task.after.output.format}</div>
-								</>
-							)}
-							{/* 分辨率码率 */}
-							{settings.paramsVisibility.smpte !== 'none' && (
-								<>
+									{/* 时间 */}
 									<div class={style.divider}><div></div></div>
-									<div class={style.smpteBefore}>{smpteBefore.value}</div>
-									{settings.paramsVisibility.smpte === 'all' && (
+									<div class={style.durationBefore}>{durationBefore.value}</div>
+									{settings.paramsVisibility.duration === 'all' && (
 										<>
-											<div class={style.smpteTo}><IconRightArrow /></div>
-											<div class={style.smpteAfter}>{props.task.after.video.resolution}@{props.task.after.video.framerate}</div>
+											<div class={style.durationTo}><IconRightArrow /></div>
+											<div class={style.durationAfter}>{durationAfter.value}</div>
+										</>
+									)}
+									{/* 容器 */}
+									<div class={style.divider}><div></div></div>
+									<div class={style.formatBefore}>{props.task.before.format}</div>
+									{settings.paramsVisibility.format === 'all' && (
+										<>
+											<div class={style.formatTo}><IconRightArrow /></div>
+											<div class={style.formatAfter}>{props.task.after.output.format}</div>
+										</>
+									)}
+									{/* 分辨率码率 */}
+									{settings.paramsVisibility.smpte !== 'none' && (
+										<>
+											<div class={style.divider}><div></div></div>
+											<div class={style.smpteBefore}>{smpteBefore.value}</div>
+											{settings.paramsVisibility.smpte === 'all' && (
+												<>
+													<div class={style.smpteTo}><IconRightArrow /></div>
+													<div class={style.smpteAfter}>{props.task.after.video.resolution}@{props.task.after.video.framerate}</div>
+												</>
+											)}
+										</>
+									)}
+									{/* 视频 */}
+									{settings.paramsVisibility.video !== 'none' && (
+										<>
+											<div class={style.divider}><div></div></div>
+											<div class={style.videoBefore}>{props.task.before.vcodec}{videoInputBitrate.value}</div>
+											{settings.paramsVisibility.video === 'all' && (
+												<>
+													<div class={style.videoTo}><IconRightArrow /></div>
+													<div class={style.videoAfter}>{props.task.after.video.vcodec}{videoRateControl.value}</div>
+												</>
+											)}
+										</>
+									)}
+									{/* 音频 */}
+									{settings.paramsVisibility.audio !== 'none' && (
+										<>
+											<div class={style.divider}><div></div></div>
+											<div class={style.audioBefore}>{props.task.before.acodec}{audioInputBitrate.value}</div>
+											{settings.paramsVisibility.audio === 'all' && (
+												<>
+													<div class={style.audioTo}><IconRightArrow /></div>
+													<div class={style.audioAfter}>{props.task.after.audio.acodec}{audioRateControl.value}</div>
+												</>
+											)}
 										</>
 									)}
 								</>
-							)}
-							{/* 视频 */}
-							{settings.paramsVisibility.video !== 'none' && (
+							) : (
 								<>
+									{/* 预设 */}
 									<div class={style.divider}><div></div></div>
-									<div class={style.videoBefore}>{props.task.before.vcodec}{videoInputBitrate.value}</div>
-									{settings.paramsVisibility.video === 'all' && (
-										<>
-											<div class={style.videoTo}><IconRightArrow /></div>
-											<div class={style.videoAfter}>{props.task.after.video.vcodec}{videoRateControl.value}</div>
-										</>
-									)}
-								</>
-							)}
-							{/* 音频 */}
-							{settings.paramsVisibility.audio !== 'none' && (
-								<>
-									<div class={style.divider}><div></div></div>
-									<div class={style.audioBefore}>{props.task.before.acodec}{audioInputBitrate.value}</div>
-									{settings.paramsVisibility.audio === 'all' && (
-										<>
-											<div class={style.audioTo}><IconRightArrow /></div>
-											<div class={style.audioAfter}>{props.task.after.audio.acodec}{audioRateControl.value}</div>
-										</>
-									)}
+									<div class={style.videoBefore}>{props.task.after.extra?.presetName === undefined ? '查看配置' : props.task.after.extra.presetName || '自定义配置'}</div>
 								</>
 							)}
 						</div>
 					)}
 					<Transition enterActiveClass={style['dashboardTrans-enter-active']} leaveActiveClass={style['dashboardTrans-leave-active']}>
 						{showDashboard.value && (
-							<div class={style.dashboardArea} style={{ top: `${(settings.showParams ? 1 : 0) * 24 + 2}px` }}>
+							<div class={style.dashboardArea}>
 								{dashboardType.value === 'convert' ? (
 									<>
 										<div class={style.linearGraphItems}>
@@ -503,5 +561,5 @@ export const TaskItem = defineComponent((props: Props) => {
 
 	);
 }, {
-	props: ['task', 'id', 'selected', 'onClick', 'onDblClick', 'onPauseOrRemove'],
+	props: ['task', 'id', 'selected', 'shouldHandleHover', 'onClick', 'onDblClick', 'onPauseOrRemove'],
 });

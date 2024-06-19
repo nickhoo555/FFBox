@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { StyleValue, VNode } from 'vue';
 
 interface Props {
-    text: string;
-    position: {[key: string]: any};
+    content: string | VNode;
+    style: StyleValue;
+	class?: string;
     show: boolean;
 }
 
@@ -11,10 +13,13 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-	<div id="tooltip" :style="props.position">
+	<div :style="props.style" :class="`tooltip ${props.class}`">
 		<Transition name="tooltipanimate">
-			<div v-if="props.show" id="tooltip-box">
-				<div id="tooltip-message" v-html="props.text"></div>
+			<div v-if="props.show" class="tooltip-box">
+				<div class="tooltip-message">
+					<span v-if="typeof props.content === 'string'">{{ props.content }}</span>
+					<component v-else :is="props.content" />
+				</div>
 			</div>
 		</Transition>
 	</div>
@@ -22,10 +27,10 @@ const props = defineProps<Props>();
 
 
 <style scoped>
-	#tooltip {
+	.tooltip {
 		position: absolute;
 		z-index: 100;
-        pointer-events: none !important;
+        pointer-events: none;
         max-width: calc(200px + 25%);
 	}
 		.tooltipanimate-enter-from {
@@ -44,7 +49,7 @@ const props = defineProps<Props>();
 			opacity: 0;
 		}
 
-		#tooltip-box {
+		.tooltip-box {
 			padding: 10px 12px;
 			background: hwb(var(--bg98));
 			will-change: transform, opacity;
@@ -53,7 +58,7 @@ const props = defineProps<Props>();
 			box-shadow: 0px 4px 8px hsla(0, 0%, 0%, 0.3);
 			z-index: 5;
 		}
-			#tooltip-message {
+			.tooltip-message {
 				font-size: 14px;
 				line-height: 1.3em;
 				text-align: left;

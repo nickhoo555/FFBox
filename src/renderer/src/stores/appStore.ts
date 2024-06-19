@@ -49,7 +49,6 @@ interface StoreState {
 	presetName: string | undefined;
 	availablePresets: string[];
 	downloadMap: Map<string, { serverId: string, taskId: number }>;
-	machineCode: string,
 	functionLevel: number;
 }
 
@@ -95,13 +94,15 @@ export const useAppStore = defineStore('app', {
 			presetName: '',
 			availablePresets: [],
 			downloadMap: new Map(),
-			machineCode: '',
 			functionLevel: 20,
 		};
 	},
 	getters: {
 		currentServer: (state) => {
 			return state.servers.find((server) => server.data.id === state.currentServerId);
+		},
+		localServer: (state) => {
+			return state.servers.length && state.servers[0].entity.ip === 'localhost' ? state.servers[0] : undefined;
 		},
 	},
 	actions: {
@@ -317,7 +318,7 @@ export const useAppStore = defineStore('app', {
 		// #endregion 任务处理
 		// #region 参数处理
 		/**
-		 * 修改全局参数后调用
+		 * 修改 globalParams 后需调用此函数
 		 * 函数将修改后的全局参数应用到当前选择的任务项，然后保存到本地磁盘
 		 * 对于用户操作，将预设参数置为未保存
 		 */
@@ -329,7 +330,11 @@ export const useAppStore = defineStore('app', {
 			const entity = 这.currentServer?.entity;
 			const data = 这.currentServer?.data;
 			if (data) {
-				// 收集需要批量更新的输出参数，交给 service
+				if (isUserInteraction) {
+					这.globalParams.extra.presetName = '';
+				}
+				这.globalParams
+				// 收集需要批量更新的输出参数，交给 service。同时本地替换一次 task.after
 				let needToUpdateIds: number[] = [];
 				for (const id of 这.selectedTask) {
 					let task = data.tasks[id];
@@ -339,6 +344,7 @@ export const useAppStore = defineStore('app', {
 				if (needToUpdateIds.length) {
 					// paraArray 由 service 算出后回填本地
 					// 更新方式是 taskUpdate
+					// 注意回填本地时也会产生一次 task.after 更新
 					entity.setParameter(needToUpdateIds, 这.globalParams);
 				}
 			}
@@ -434,6 +440,7 @@ export const useAppStore = defineStore('app', {
 						这.globalParams.video = params.video;
 						这.globalParams.audio = params.audio;
 						这.globalParams.output = params.output;
+						这.globalParams.extra.presetName = name;
 					}
 					这.presetName = name;
 					这.applyParameters(false);
@@ -524,6 +531,7 @@ export const useAppStore = defineStore('app', {
 				propertiesResponse.json().then((obj) => {
 					server.data.os = obj.os;
 					server.data.isSandboxed = obj.isSandboxed;
+					server.data.machineId = obj.machineId;
 				});
 			});
 		},
@@ -655,14 +663,14 @@ export const useAppStore = defineStore('app', {
 				 * 管理端使用这个 key 对 functionLevel 加密，得到的加密字符串由用户输入到 userInput 中去
 				 * 客户端将 userInput 使用 key 解密，如果 userInput 不是瞎编的，那么就能解出正确的 functionLevel
 				 */
-				const machineCode = await (nodeBridge.localStorage.get('userinfo.machineCode') || '') as string;
+				const machineCode = 这.localServer?.data.machineId ?? '';
 				const fixedCode = 'd324c697ebfc42b7';
 				const key = machineCode + fixedCode;
 				const decrypted = CryptoJS.AES.decrypt(userInput, key)
 				const decryptedString = CryptoJS.enc.Utf8.stringify(decrypted);
 				if (parseInt(decryptedString).toString() === decryptedString) {
 					这.functionLevel = parseInt(decryptedString);
-					这.currentServer.entity.activate(machineCode, userInput);
+					这.currentServer.entity.activate(userInput);
 					callback(parseInt(decryptedString))
 				} else {
 					callback(false);

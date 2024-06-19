@@ -9,6 +9,7 @@ import { getFFmpegParaArray, getFFmpegParaArrayOutputPath } from '@common/getFFm
 import { generator as fGenerator } from '@common/params/formats';
 import { defaultParams } from '@common/defaultParams';
 import { getInitialServiceTask, convertAnyTaskToTask, getTimeString, TypedEventEmitter, replaceOutputParams, randomString } from '@common/utils';
+import { getMachineId } from './utils';
 import { FFmpeg } from './FFmpegInvoke';
 import UIBridge from './uiBridge';
 
@@ -30,6 +31,7 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 	public notifications: Notification[] = [];
 	private latestNotificationId = 0;
 	private functionLevel = 20;
+	public machineId: string;
 
 	constructor() {
 		super();
@@ -37,10 +39,23 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		this.globalTask = getInitialServiceTask('');
 		this.tasklist[-1] = this.globalTask;
 		setTimeout(() => {
+			this.initActivationInfo();
 			this.initSettings();
 			this.initUIBridge();
 			this.initFFmpeg();
 		}, 0);
+	}
+
+	private initActivationInfo() {
+		this.machineId = getMachineId();
+		// 暂未支持本地存储激活信息，还需手动激活
+	}
+
+	/**
+	 * 从本地存储初始化设置
+	 */
+	private initSettings(): void {
+		this.globalTask.after = defaultParams;
 	}
 
 	/**
@@ -49,13 +64,6 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 	private initUIBridge(): void {
 		UIBridge.init(this);
 		UIBridge.listen();
-	}
-
-	/**
-	 * 从本地存储初始化设置
-	 */
-	public initSettings(): void {
-		this.globalTask.after = defaultParams;
 	}
 
 	/**
@@ -257,7 +265,8 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		if (this.functionLevel < 50) {
 			const videoParam = task.after.video;
 			if (videoParam.ratecontrol === 'ABR' || videoParam.ratecontrol === 'CBR') {
-				if (videoParam.ratevalue > 0.75 || videoParam.ratevalue < 0.25) {
+				const ratevalue = videoParam.ratevalue as number;
+				if (ratevalue > 0.75 || ratevalue < 0.25) {
 					this.setNotification(
 						id,
 						`任务「${task.fileBaseName}」设置的视频码率已被限制<br/>` +
@@ -266,7 +275,7 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 							'一般是进行项目捐助，或者下载源码自行编译去除限制，或者直接使用 FFmpeg 进行进阶操作✅',
 						NotificationLevel.warning,
 					);
-					videoParam.ratevalue = videoParam.ratevalue > 0.75 ? 0.75 : 0.25;
+					videoParam.ratevalue = ratevalue > 0.75 ? 0.75 : 0.25;
 				}
 			}
 		}
@@ -662,9 +671,9 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		this.notifications[notificationId] = notification;
 	}
 
-	public activate(machineCode: string, activationCode: string): boolean {
+	public activate(activationCode: string): boolean {
 		const fixedCode = 'd324c697ebfc42b7';
-		const key = machineCode + fixedCode;
+		const key = this.machineId + fixedCode;
 		const decrypted = CryptoJS.AES.decrypt(activationCode, key);
 		const decryptedString = CryptoJS.enc.Utf8.stringify(decrypted);
 		if (parseInt(decryptedString).toString() === decryptedString) {
@@ -675,14 +684,14 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		}
 	}
 
-	public trailLimit_stopTranscoding(id: number): void {
+	public trailLimit_stopTranscoding(id: number, byFrontend = false): void {
 		const task = this.tasklist[id];
 		this.setNotification(
 			id,
-			`任务「${task.fileBaseName}」转码被中止了<br/>` +
-				'💔根据您的用户等级，只能处理最多 11:11 的媒体时长和花费最多 11:11 的处理耗时<br/>' +
-				'😞很抱歉给您带来的不便，您可以到 FFBox 官网寻求解决方案<br/>' +
-				'一般是进行项目捐助，或者下载源码自行编译去除限制，或者直接使用 FFmpeg 进行进阶操作✅',
+			`任务「${task.fileBaseName}」转码达到时长上限了${byFrontend ? '（前端）' : '（后端）'}💔<br/>` +
+				'FFBox 免费版最大提供 11:11 的媒体时长和 11:11 的处理耗时<br/>' +
+				'您可下载源码自行编译去除限制，或者直接使用 FFmpeg 执行✅<br/>' +
+				'亦可在官网或官方信息发布平台寻求解决方案～',
 			NotificationLevel.error,
 		);
 		task.status = TaskStatus.TASK_STOPPING;

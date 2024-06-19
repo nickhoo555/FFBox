@@ -296,8 +296,8 @@ export const TaskItem: FunctionalComponent<Props> = (props) => {
 	const handleMouseEnter = (event: MouseEvent) => {
 		if (task.status === TaskStatus.TASK_FINISHED) {
 			Tooltip.show({
-				text: `双击以${appStore.currentServer.entity.ip === 'localhost' ? '打开' : '下载'}输出文件`,
-				position: {
+				content: `双击以${appStore.currentServer.entity.ip === 'localhost' ? '打开' : '下载'}输出文件`,
+				style: {
 					right: `calc(100vw - ${event.pageX}px)`,
 					top: `${event.pageY}px`,
 				},

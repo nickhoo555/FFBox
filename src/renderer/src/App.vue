@@ -67,12 +67,7 @@ onMounted(async () => {
 				level: 0,
 			});
 			nodeBridge.localStorage.set('version.buildNumber', buildNumber);
-			// 生成随机机器码
-			let machineCode = randomString(16, '0123456789abcdef');
-			nodeBridge.localStorage.set('userinfo.machineCode', machineCode);
-			appStore.machineCode = machineCode;
 		} else {
-			appStore.machineCode = await nodeBridge.localStorage.get('userinfo.machineCode');
 			gp.input = await nodeBridge.localStorage.get('input') || gp.input;
 			gp.video = await nodeBridge.localStorage.get('video') || gp.video;
 			gp.audio = await nodeBridge.localStorage.get('audio') || gp.audio;

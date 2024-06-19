@@ -40,4 +40,7 @@ export const defaultParams: OutputParams = {
 		moveflags: false,
 		filename: '[filedir]/[filebasename]_converted.[fileext]',
 	},
+	extra: {
+		presetName: '默认配置',
+	}
 };

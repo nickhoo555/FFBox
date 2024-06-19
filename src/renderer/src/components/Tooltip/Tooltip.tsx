@@ -1,14 +1,15 @@
-import { AppContext, createVNode, render } from 'vue';
+import { AppContext, createVNode, VNode, render, StyleValue } from 'vue';
 import TooltipUI from './TooltipComponent.vue';
 
 export interface TooltipOptions {
-	text: string,
-	position: any, // 应是 vue :style 的对象类型
+	content: string | VNode,
+	style: StyleValue,
+	class?: string,
 }
 
 const defaultProps = {
-	text: '',
-	position: {},
+	content: '',
+	style: {},
 	show: false,
 };
 
@@ -23,8 +24,9 @@ const Tooltip = function () {
 };
 
 Tooltip.show = function (options: TooltipOptions) {
-	vnode.component.props.text = options.text;
-	vnode.component.props.position = options.position;
+	vnode.component.props.content = options.content;
+	vnode.component.props.style = options.style;
+	vnode.component.props.class = options.class;
 	vnode.component.props.show = true;
 }
 

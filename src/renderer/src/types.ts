@@ -44,6 +44,7 @@ export interface ServerData {
 	version?: string;
 	os?: 'Windows' | 'Linux' | 'MacOS' | 'unknown';
 	isSandboxed?: boolean;
+	machineId?: string;
 	workingStatus: WorkingStatus;
 	progress: number;	// 由每个任务更新时计算出来
 	overallProgressTimerID: any;

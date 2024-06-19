@@ -132,6 +132,7 @@ const onDrop = (event: DragEvent) => {	// 此函数触发四次 taskList update�
 				:task="task"
 				:id="task.id"
 				:selected="appStore.selectedTask.has(task.id)"
+				:should-handle-hover="true"
 				@click="handleTaskClicked($event, task.id, index)"
 				@pause-or-remove="appStore.pauseNremove(task.id)"
 			/>

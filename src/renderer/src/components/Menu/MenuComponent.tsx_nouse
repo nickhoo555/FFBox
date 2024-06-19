@@ -167,8 +167,8 @@ const MenuComponent: FunctionalComponent<Props> = (props) => {
 				};
 			}
 			Tooltip.show({
-				text: menuItem.tooltip,
-				position,
+				content: menuItem.tooltip,
+				style,
 			});
 		}
 		currentSelectedValue.value = 'value' in menuItem ? menuItem.value : undefined;

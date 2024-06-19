@@ -1,5 +1,4 @@
 import { FunctionalComponent, ref, VNodeRef } from 'vue';
-import { $ref } from 'vue/macros'
 import { useAppStore } from '@renderer/stores/appStore';
 import style from './index.module.less';
 import Msgbox from '@renderer/components/Msgbox/Msgbox';

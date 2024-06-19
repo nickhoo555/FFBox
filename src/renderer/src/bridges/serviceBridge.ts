@@ -235,10 +235,10 @@ export class ServiceBridge extends (EventEmitter as new () => TypedEventEmitter<
 		this.sendWs(data);
 	}
 
-	public activate(machineCode: string, activationCode: string) {
+	public activate(activationCode: string) {
 		let data: FFBoxServiceFunctionApi = {
 			function: 'activate',
-			args: [machineCode, activationCode],
+			args: [activationCode],
 		}
 		this.sendWs(data);
 	}
@@ -246,7 +246,7 @@ export class ServiceBridge extends (EventEmitter as new () => TypedEventEmitter<
 	public trailLimit_stopTranscoding(id: number) {
 		let data: FFBoxServiceFunctionApi = {
 			function: 'trailLimit_stopTranscoding',
-			args: [id],
+			args: [id, true],
 		}
 		this.sendWs(data);
 	}

@@ -237,6 +237,7 @@ function getRouter(): Router {
 		const result = {
 			os: getOs(),
 			isSandboxed: process.cwd() === '/', // macOS 中，直接双击运行服务（无论是否在 app 内）会得到用户目录，在终端运行会得到终端当前目录，通过 FFBox 调用会得到 '/'
+			machineId: ffboxService.machineId,			
 		};
 		ctx.response.status = 200;
 		ctx.response.body = result;

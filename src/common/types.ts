@@ -14,8 +14,8 @@ export interface FFBoxServiceInterface {
 	queuePause(): void;
 	deleteNotification(taskId: number, index: number): void;
 	setParameter(ids: Array<number>, param: OutputParams): void;
-	activate(machineCode: string, activationCode: string): boolean | void;
-	trailLimit_stopTranscoding(id: number): void;
+	activate(activationCode: string): boolean | void;
+	trailLimit_stopTranscoding(id: number, byFrontend?: boolean): void;
 }
 
 export interface FFBoxServiceEventParam {
@@ -47,6 +47,7 @@ export interface OutputParams {
 	video: OutputParams_video;
 	audio: OutputParams_audio;
 	output: OutputParams_output;
+	extra: OutputParams_extra;
 }
 
 export type OutputParams_input = {
@@ -89,6 +90,10 @@ export type OutputParams_output = {
 	end?: string;
 	custom?: string;
 };
+
+export type OutputParams_extra = {
+	presetName?: string;
+}
 
 export interface InputFile {
 	filePath?: string;		// 本地模式下直接是文件全路径，网络模式下 merge 之后获得的文件名填充到此处

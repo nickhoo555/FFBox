@@ -308,6 +308,7 @@ export function getInitialTask(fileBaseName: string, outputParams?: OutputParams
 				moveflags: false,
 				filename: '',
 			},
+			extra: {},
 		},
 		paraArray: [],
 		status: TaskStatus.TASK_STOPPED,
@@ -414,6 +415,7 @@ export function replaceOutputParams(from: OutputParams, to: OutputParams) {
 		video: JSON.parse(JSON.stringify(from.video)),
 		audio: JSON.parse(JSON.stringify(from.audio)),
 		output: JSON.parse(JSON.stringify(from.output)),
+		extra: JSON.parse(JSON.stringify(from.extra)),
 	};
 	// 以下参数更改为任务原有的参数
 	ret.input.mode = to.input.mode;
