@@ -248,17 +248,7 @@ class ElectronApp {
 
 		// 打开文件
 		ipcMain.on('openFile', (event, url: string) => {
-			switch (getOs()) {
-				case 'MacOS':
-					exec(url);
-					break;
-				case 'Windows':
-					exec(url);
-					break;
-				case 'Linux':
-					exec(url);
-					break;
-			}
+			shell.openPath(url);
 		});
 
 		// 闪烁任务栏图标

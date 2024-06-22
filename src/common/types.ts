@@ -179,7 +179,7 @@ export interface Task {
 	cmdData: string;
 	errorInfo: Array<string>;
 	// notifications: Array<Notification>;
-	outputFile: string;		// 对于本地任务，表示生成文件的绝对路径；对于远程任务，省略文件夹名 mergeUploaded 后生成。如无则为 ''
+	outputFile: string;		// 对于本地任务，表示生成文件的绝对路径；对于远程任务，则为 basename（自动生成的字符串） + ext，在 taskAdd 和调节参数之后生成文件名。
 }
 
 export interface ServiceTask extends Task {

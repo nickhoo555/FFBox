@@ -28,5 +28,5 @@ export function getFFmpegParaArrayOutputPath(outputParams: OutputParams) {
 	const inputFilePath = outputParams.input.files[0] && outputParams.input.files[0].filePath;
 	const outputBaseName = trimExt(basename(inputFilePath || '[输出文件名]'));
 	const outputDir = dirname(inputFilePath || '[输出目录]');
-	return fGenerator.concatFilePath(outputParams.output, outputDir, outputBaseName);
+	return fGenerator.getOutputPathLocal(outputParams.output, outputDir, outputBaseName);
 }

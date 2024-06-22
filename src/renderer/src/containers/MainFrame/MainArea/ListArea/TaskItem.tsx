@@ -297,6 +297,7 @@ export const TaskItem = defineComponent((props: Props) => {
 	});
 	onMounted(() => {
 		window.addEventListener('resize', windowWidthListener.value);
+		windowWidthListener.value();
 	});
 	onBeforeUnmount(() => {
 		window.removeEventListener('resize', windowWidthListener.value);

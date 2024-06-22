@@ -135,7 +135,7 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 			// 本地文件直接获取媒体信息
 			this.getFileMetadata(id, task, filePath);
 		} else {
-			task.outputFile = fGenerator.concatFilePath(task.after.output, undefined, `${new Date().getTime()}${randomString(3)}`);
+			task.outputFile = fGenerator.getOutputPathRemote(task.after.output, `${new Date().getTime()}${randomString(3)}`);
 			task.paraArray = getFFmpegParaArray(task.after, true, undefined, undefined, task.outputFile);
 			// 网络文件等待上传完成后再另行调用获取媒体信息
 			task.status = TaskStatus.TASK_INITIALIZING;
@@ -616,7 +616,7 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 			const filePath = task.after.input.files[0].filePath;
 			if (task.remoteTask) {
 				// 如果修改了输出格式，需要重新计算 outputFile
-				task.outputFile = fGenerator.concatFilePath(task.after.output, undefined, `${new Date().getTime()}${randomString(3)}`);
+				task.outputFile = fGenerator.getOutputPathRemote(task.after.output, `${new Date().getTime()}${randomString(3)}`);
 				task.paraArray = getFFmpegParaArray(task.after, true, undefined, undefined, task.outputFile);
 			} else {
 				task.paraArray = getFFmpegParaArray(task.after, true);

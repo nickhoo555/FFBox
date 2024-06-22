@@ -135,9 +135,9 @@ const hwaccels: Hwaccel[] = [
 
 const generator = {
 	/**
-	 * 连接并补充扩展名的文件名（fileDir 为空则仅输出带扩展名的文件名）
+	 * 连接并补充扩展名的文件名
 	 */
-	concatFilePath: function (outputParams: OutputParams_output, fileDir: string, fileBasename: string) {
+	getOutputPathLocal: function (outputParams: OutputParams_output, fileDir: string, fileBasename: string) {
 		let extension;
 		if (outputParams.format.length && outputParams.format !== '无') {
 			let format = formats.find((item) => {
@@ -149,11 +149,25 @@ const generator = {
 				extension = outputParams.format;
 			}
 		}
-		let filePath = '';
-		if (fileDir) {
-			filePath += `${fileDir}${fileDir.endsWith('/') ? '' : '/'}`;
+		let outputFileName = outputParams.filename;
+		outputFileName = outputFileName.replace(/\[filedir\]/g, fileDir);
+		outputFileName = outputFileName.replace(/\[filebasename\]/g, fileBasename);
+		outputFileName = outputFileName.replace(/\[fileext\]/g, extension);
+		return outputFileName;
+	},
+	getOutputPathRemote: function (outputParams: OutputParams_output, fileBasename: string) {
+		let extension;
+		if (outputParams.format.length && outputParams.format !== '无') {
+			let format = formats.find((item) => {
+				return item.value === outputParams.format;
+			});
+			if (format) {
+				extension = format.extension;
+			} else {	// 用户手动输入的格式
+				extension = outputParams.format;
+			}
 		}
-		filePath += fileBasename;
+		let filePath = fileBasename;
 		if (extension) {
 			filePath += `.${extension}`;
 		}

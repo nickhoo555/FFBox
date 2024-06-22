@@ -2,6 +2,7 @@ import { VNodeRef } from 'vue';
 import { defineStore } from 'pinia';
 import CryptoJS from 'crypto-js';
 import { Notification, NotificationLevel, OutputParams, TaskStatus, TransferStatus, WorkingStatus } from '@common/types';
+import { version } from '@common/constants'; 
 import { Server } from '@renderer/types';
 import { defaultParams } from "@common/defaultParams";
 import { ServiceBridge, ServiceBridgeStatus } from '@renderer/bridges/serviceBridge'
@@ -527,7 +528,12 @@ export const useAppStore = defineStore('app', {
 				fetch(`http://${server.entity.ip}:${server.entity.port}/version`, { method: 'get' }),
 				fetch(`http://${server.entity.ip}:${server.entity.port}/properties`, { method: 'get' }),
 			]).then(([versionResponse, propertiesResponse]) => {
-				versionResponse.text().then((text) => server.data.version = text);
+				versionResponse.text().then((text) => {
+					server.data.version = text;
+					if (text !== version) {{
+						Popup({ message: '服务器版本与客户端版本不匹配，可能会导致部分操作异常，请谨慎操作', level: NotificationLevel.warning });
+					}}
+				});
 				propertiesResponse.json().then((obj) => {
 					server.data.os = obj.os;
 					server.data.isSandboxed = obj.isSandboxed;
