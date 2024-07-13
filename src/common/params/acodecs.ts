@@ -1291,7 +1291,7 @@ const generator = {
 				if (acodec.strict2 || aencoder.strict2) {
 					strict2 = true;
 				}
-				for (const parameter of aencoder.parameters) {
+				for (const parameter of aencoder.parameters || []) {
 					// 普通的详细参数
 					if (parameter.mode === 'combo') {
 						if (audioParams.detail[parameter.parameter] != '默认' && audioParams.detail[parameter.parameter] != '自动') {
@@ -1310,7 +1310,7 @@ const generator = {
 						ret.push(value);
 					}
 				}
-				const ratecontrol = aencoder.ratecontrol.find((item) => item.value === audioParams.ratecontrol);
+				const ratecontrol = (aencoder.ratecontrol || []).find((item) => item.value === audioParams.ratecontrol);
 				if (ratecontrol) {
 					// 计算值
 					const floatValue = audioParams.ratevalue;

@@ -261,6 +261,10 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 			elapsed: 0,
 			lastPaused: new Date().getTime() / 1000,
 		};
+		this.emit('progressUpdate', {
+			taskId: id,
+			time: new Date().getTime() / 1000,
+		});
 		this.setCmdText(id, '', false);
 		if (this.functionLevel < 50) {
 			const videoParam = task.after.video;
@@ -290,6 +294,7 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		newFFmpeg.on('finished', () => {
 			console.log(getTimeString(new Date()), `任务完成：${task.fileBaseName}。id：${id}。`);
 			task.status = TaskStatus.TASK_FINISHED;
+			task.progressLog.elapsed = new Date().getTime() / 1000 - task.progressLog.lastStarted;
 			this.setNotification(id, `任务「${task.fileBaseName}」已转码完成`, NotificationLevel.ok);
 			this.emit('taskUpdate', {
 				taskId: id,
@@ -299,20 +304,22 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 			this.queueAssign(Object.keys(this.tasklist).findIndex((key) => parseInt(key) === id) + 1);
 		});
 		newFFmpeg.on('status', (status: FFmpegProgress) => {
+			const progressLog = task.progressLog;
+			const time = new Date().getTime() / 1000 - progressLog.lastStarted + progressLog.elapsed;
 			for (const parameter of ['time', 'frame', 'size']) {
 				const _parameter = parameter as 'time' | 'frame' | 'size';
-				task.progressLog[_parameter].push([new Date().getTime() / 1000, status[_parameter]]);
-				task.progressLog[_parameter].splice(0, task.progressLog[_parameter].length - 5); // 限制列表最大长度为 5
+				progressLog[_parameter].push([time, status[_parameter]]);
 			}
 			if (this.functionLevel < 50) {
-				if (task.progressLog.time[task.progressLog.time.length - 1][1] > 671 || task.progressLog.elapsed + new Date().getTime() / 1000 - task.progressLog.lastStarted > 671) {
+				if (progressLog.time[progressLog.time.length - 1][1] > 671 || progressLog.elapsed + new Date().getTime() / 1000 - progressLog.lastStarted > 671) {
 					this.trailLimit_stopTranscoding(id);
 					return;
 				}
 			}
 			this.emit('progressUpdate', {
 				taskId: id,
-				content: task.progressLog,
+				time,
+				status,
 			});
 		});
 		newFFmpeg.on('data', ({ content }) => {
@@ -346,9 +353,8 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		});
 		for (const parameter of ['time', 'frame', 'size']) {
 			const _parameter = parameter as 'time' | 'frame' | 'size';
-			task.progressLog[_parameter].push([new Date().getTime() / 1000, 0]);
+			task.progressLog[_parameter].push([new Date().getTime() / 1000 - task.progressLog.lastStarted, 0]);
 		}
-		task.progressLog.lastStarted = new Date().getTime() / 1000;
 		task.ffmpeg = newFFmpeg;
 		this.emit('taskUpdate', {
 			taskId: id,
@@ -400,13 +406,6 @@ export class FFBoxService extends (EventEmitter as new () => TypedEventEmitter<F
 		}
 		task.status = TaskStatus.TASK_RUNNING;
 		const nowRealTime = new Date().getTime() / 1000;
-		const passedTime = nowRealTime - task.progressLog.lastPaused;
-		for (const parameter of ['time', 'frame', 'size']) {
-			const _parameter = parameter as 'time' | 'frame' | 'size';
-			for (const logLine of task.progressLog[_parameter]) {
-				logLine[0] += passedTime;
-			}
-		}
 		task.progressLog.lastStarted = nowRealTime;
 		task.ffmpeg!.resume();
 		this.emit('taskUpdate', {

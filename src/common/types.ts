@@ -24,7 +24,7 @@ export interface FFBoxServiceEventParam {
 	tasklistUpdate: { content: number[] };
 	taskUpdate: { taskId: number; task: Task };
 	cmdUpdate: { taskId: number; content: string; append: boolean };	// 由 append 确定是增量还是全量更新
-	progressUpdate: { taskId: number; content: any };	// 暂时为全量更新，因后端限制了总量为 5 条
+	progressUpdate: { taskId: number; time: number; status?: FFmpegProgress };	// 增量更新（status 未定义则为清空）
 	notificationUpdate: { notificationId: number; notification?: Notification };	// 增量（notification 未定义则为删除）
 }
 

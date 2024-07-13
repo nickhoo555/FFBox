@@ -615,7 +615,7 @@ export const useAppStore = defineStore('app', {
 					handleCmdUpdate(server, data.taskId, data.content);
 				});
 				entity.on('progressUpdate', (data) => {
-					handleProgressUpdate(server, data.taskId, data.content, 这.functionLevel);
+					handleProgressUpdate(server, data.taskId, data.time, data.status, 这.functionLevel);
 				});
 				entity.on('notificationUpdate', (data) => {
 					handleNotificationUpdate(server, data.notificationId, data.notification);

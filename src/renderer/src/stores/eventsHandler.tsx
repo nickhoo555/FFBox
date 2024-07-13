@@ -1,5 +1,5 @@
 import nodeBridge from "@renderer/bridges/nodeBridge";
-import { Notification, Task, TaskStatus, TransferStatus, WorkingStatus } from "@common/types";
+import { FFmpegProgress, Notification, Task, TaskStatus, TransferStatus, WorkingStatus } from "@common/types";
 import { Server, UITask } from '@renderer/types';
 import { getInitialUITask, mergeTaskFromService } from "@common/utils";
 import { dashboardTimer, overallProgressTimer } from "@renderer/common/dashboardCalc";
@@ -86,9 +86,21 @@ export function handleTaskUpdate(server: Server, id: number, content: Task) {
     }
     const task = mergeTaskFromService(serverData.tasks[id], content);
     serverData.tasks[id] = task;
-    // timer 相关处理
+    // timer 相关处理（开始运行时添加定时器，结束或暂停运行时取消定时器）
     if (task.status === TaskStatus.TASK_RUNNING && !task.dashboardTimer) {
         task.dashboardTimer = setInterval(dashboardTimer, 50, task) as any;
+        if (task.progressLog.time.length <= 1) {
+            task.dashboard_smooth = {
+				progress: 0,
+				bitrate: 0,
+				speed: 0,
+				time: 0,
+				frame: 0,
+				size: 0,
+				transferred: 0,
+				transferSpeed: 0,
+			}
+        }
     } else if (task.dashboardTimer) {
         clearInterval(task.dashboardTimer);
         task.dashboardTimer = NaN;
@@ -114,13 +126,29 @@ export function handleCmdUpdate(server: Server, id: number, content: string) {
     task.cmdData += content;
 };
 /**
- * 整个更新 progressLog
+ * 增量更新 progressLog
  */
-export function handleProgressUpdate(server: Server, id: number, progressLog: Task['progressLog'], functionLevel: number) {
-    server.data.tasks[id].progressLog = progressLog;
-    if (functionLevel < 50) {
-        if (progressLog.time.slice(-1)[0][1] > 671 ||
-            progressLog.elapsed + new Date().getTime() / 1000 - progressLog.lastStarted > 671) {
+export function handleProgressUpdate(server: Server, id: number, time: number, status: FFmpegProgress | undefined, functionLevel: number) {
+    const task = server.data.tasks[id];
+    if (status) {
+        for (const parameter of ['time', 'frame', 'size']) {
+            const _parameter = parameter as 'time' | 'frame' | 'size';
+            task.progressLog[_parameter].push([time, status[_parameter]]);
+        }
+    } else {
+        task.progressLog = {
+            time: [],
+			frame: [],
+			size: [],
+			lastStarted: time,
+			elapsed: 0,
+			lastPaused: time,
+        };
+    }
+    // server.data.tasks[id].progressLog = progressLog;
+    if (functionLevel < 50 && task.progressLog.time.length > 0) {
+        if (task.progressLog.time.slice(-1)[0][1] > 671 ||
+            task.progressLog.elapsed + new Date().getTime() / 1000 - task.progressLog.lastStarted > 671) {
             server.entity.trailLimit_stopTranscoding(id);
             return;
         }

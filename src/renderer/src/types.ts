@@ -8,7 +8,7 @@ export interface UITask extends Task {
 		speed: number;
 		time: number;
 		frame: number;
-		size: number;
+		size: number;	// kB
 		transferred: number;
 		transferSpeed: number;
 	};
@@ -18,7 +18,7 @@ export interface UITask extends Task {
 		speed: number;
 		time: number;
 		frame: number;
-		size: number;
+		size: number;	// kB
 		transferred: number;
 		transferSpeed: number;
 	};

@@ -27,7 +27,7 @@
 					0 2px 6px 0 hwb(0deg 0% 100% / 0.2);	// 阴影
 		transition: height 0.5s, background-color 0.3s;
 		pointer-events: all;
-		&:hover, &:has(~ .taskName:hover, ~ .paraArea:hover, ~ .cmdArea:hover) {
+		&:hover, &:has(~ .taskName:hover, ~ .paraArea:hover, ~ .cmdArea:hover, ~ .dashboardArea:hover) {
 			transition: background-color 0.2s cubic-bezier(0, 2, 0.3, 1);
 			background: hwb(var(--menuItemHovered));
 		}
@@ -171,6 +171,29 @@
 		text-align: right;
 		&>* {
 			vertical-align: middle;
+		}
+		&>.roundGraphItem, &>.linearGraphItems, &>.textItem {
+			&:hover::before {
+				content: '';
+				position: absolute;
+				left: -8px;
+				top: -4px;
+				right: -8px;
+				bottom: -4px;
+				border-radius: 8px;
+				background-color: hwb(var(--bg100) / 0.3);
+				box-shadow: 0 1px 2px -1px hwb(var(--hoverShadow) / 0.6),
+							0 0 1px 0.5px hwb(var(--hoverLightBg) / 0.6),
+							0 1px 0.5px 0px hwb(var(--highlight) / 0.8) inset;	// 上高光
+			}
+			&:active {
+				transform: translateY(0.25px);
+			}
+			&:active::before {
+				background-color: hwb(var(--bg100) / 0.2);
+				box-shadow: 0 0.5px 1px 0.5px hwb(var(--hoverShadow) / 0.05), // 外部阴影
+							0 6px 12px hwb(var(--hoverShadow) / 0.1) inset; // 内部凹陷阴影
+			}
 		}
 		.roundGraphItem {
 			position: relative;

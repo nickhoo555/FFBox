@@ -2499,7 +2499,7 @@ const generator = {
 				if (vcodec.strict2 || vencoder.strict2) {
 					strict2 = true;
 				}
-				for (const parameter of vencoder.parameters) {
+				for (const parameter of vencoder.parameters || []) {
 					// 逐个遍历详细参数
 					if (parameter.mode === 'combo') {
 						if (videoParams.detail[parameter.parameter] != '默认' && videoParams.detail[parameter.parameter] != '自动') {
@@ -2519,10 +2519,10 @@ const generator = {
 					}
 				}
 								// 调试用↓
-								// ret.push('-threads')
-								// ret.push('1')
+								ret.push('-threads')
+								ret.push('1')
 								// 调试用↑
-				const ratecontrol = vencoder.ratecontrol.find((item) => item.value === videoParams.ratecontrol);
+				const ratecontrol = (vencoder.ratecontrol || []).find((item) => item.value === videoParams.ratecontrol);
 				if (ratecontrol) {
 					// 计算值
 					const floatValue = videoParams.ratevalue;

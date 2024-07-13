@@ -127,9 +127,9 @@ export class FFmpeg extends (EventEmitter as new () => TypedEventEmitter<FFmpegI
 		 */
 		switch (this.sm) {
 			case 0:
-				if (thisLine.includes('frame=') && !thisLine.includes('Lsize')) {
+				if (thisLine.includes('frame=')) {
 					// 🔵 status（有视频）
-					// const l_status = scanf(thisLine, `frame=%d fps=%f q=%f size=%dkB time=%d:%d:%d.%d bitrate=%dkbits/s speed=%dx`);
+					// const l_status = scanf(thisLine, `frame=%d fps=%f q=%f (L)size=%dkB time=%d:%d:%d.%d bitrate=%dkbits/s speed=%dx`);
 					const l_status = thisLine.match(/(\d+([.|:]?\d*)*)|(N\/A)/g)!;
 					const time = l_status[4].match(/\d+/g)!;
 					this.emit('status', {

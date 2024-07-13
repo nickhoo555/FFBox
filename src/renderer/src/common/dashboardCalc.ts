@@ -90,12 +90,13 @@ function getKbyLWMA(sampleCount: number, data: SingleProgressLog): number {
 /**
  * 对单个数据计算数据变化速率（k）和初值（b），获得该数据在指定时间的预估值（current）
  * 将对整个数组进行采样。因此如果要限定采样长度，先对数组进行裁剪处理
+ * 如果不需要取 currentValue，那么 elapsedTime 可以传任意值
  */
-function calcDashboard(progressLog: SingleProgressLog, time = new Date()) {
+export function calcDashboard(progressLog: SingleProgressLog, elapsedTime: number) {
 	const K = getKbyLWMA(progressLog.length, progressLog);
 	const B = progressLog[progressLog.length - 1][1] - K * progressLog[progressLog.length - 1][0];	// b = y - k * x
-	const systime = new Date().getTime() / 1000;
-	const currentValue = systime * K + B;
+	// const systime = new Date().getTime() / 1000;
+	const currentValue = elapsedTime * K + B;
 	return { K, B, currentValue };
 }
 
@@ -104,14 +105,16 @@ function calcDashboard(progressLog: SingleProgressLog, time = new Date()) {
  */
 export function dashboardTimer(task: UITask) {
 	if (task.transferStatus === TransferStatus.normal) {
-		if (task.progressLog.time.length <= 2) {
+		const progressLog = task.progressLog;
+		if (progressLog.time.length <= 2) {
 			// 任务刚开始时显示的数据不准确
 			return;
 		}
 
-		const { K: frameK, B: frameB, currentValue: currentFrame } = calcDashboard(task.progressLog.frame);
-		const { K: timeK, B: timeB, currentValue: currentTime } = calcDashboard(task.progressLog.time);
-		const { K: sizeK, B: sizeB, currentValue: currentSize } = calcDashboard(task.progressLog.size);
+		const elapsedTime = new Date().getTime() / 1000 - progressLog.lastStarted + progressLog.elapsed;
+		const { K: frameK, B: frameB, currentValue: currentFrame } = calcDashboard(progressLog.frame.slice(-5), elapsedTime);
+		const { K: timeK, B: timeB, currentValue: currentTime } = calcDashboard(progressLog.time.slice(-5), elapsedTime);
+		const { K: sizeK, B: sizeB, currentValue: currentSize } = calcDashboard(progressLog.size.slice(-5), elapsedTime);
 		// console.log("frameK: " + frameK + ", timeK: " + timeK + ", sizeK: " + sizeK);
 		// console.log("currentFrame: " + currentFrame + ", currentTime: " + currentTime + ", currentSize: " + currentSize);
 
@@ -160,7 +163,8 @@ export function dashboardTimer(task: UITask) {
 			return;
 		}
 
-		const { K: transferredK, B: transferredB, currentValue: currentTransferred } = calcDashboard(task.transferProgressLog.transferred);
+		const elapsedTime = new Date().getTime() / 1000 - 0;	// TODO！！
+		const { K: transferredK, B: transferredB, currentValue: currentTransferred } = calcDashboard(task.transferProgressLog.transferred.slice(-5), elapsedTime);
 		// console.log(`transferredK: ${transferredK}`);
 		// console.log(`currentTransferred: ${currentTransferred}`);
 

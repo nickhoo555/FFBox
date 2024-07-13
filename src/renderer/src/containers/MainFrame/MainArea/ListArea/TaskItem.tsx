@@ -5,6 +5,7 @@ import { generator as vGenerator } from '@common/params/vcodecs';
 import { generator as aGenerator } from '@common/params/acodecs';
 import { useAppStore } from '@renderer/stores/appStore';
 import Tooltip from '@renderer/components/Tooltip/Tooltip';
+import { showProgressInfo } from '@renderer/components/misc/ProgressInfo';
 import nodeBridge from '@renderer/bridges/nodeBridge';
 import { stringifyTimeValue } from '@common/utils';
 import { getOutputDuration } from '@renderer/common/dashboardCalc';
@@ -109,9 +110,12 @@ export const TaskItem = defineComponent((props: Props) => {
 	const graphTime = computed(() => timeFilter(props.task.dashboard_smooth.time));
 	const graphLeftTime = computed(() => {
 		const totalDuration = outputDuration.value;
-		const needTime = totalDuration / props.task.dashboard_smooth.speed;
-		const remainTime = (totalDuration - props.task.dashboard_smooth.time) / totalDuration * needTime;	// 剩余进度比例 * 全进度耗时
-		return timeFilter(remainTime, false);
+		if (props.task.dashboard_smooth.speed > 0) {
+			const needTime = totalDuration / props.task.dashboard_smooth.speed;
+			const remainTime = (totalDuration - props.task.dashboard_smooth.time) / totalDuration * needTime;	// 剩余进度比例 * 全进度耗时
+			return timeFilter(remainTime, false);
+		}
+		return '-';
 	});
 	const graphSizeFilter = (kB: number) => {
 		const B = kB * 1000;
@@ -472,10 +476,10 @@ export const TaskItem = defineComponent((props: Props) => {
 					)}
 					<Transition enterActiveClass={style['dashboardTrans-enter-active']} leaveActiveClass={style['dashboardTrans-leave-active']}>
 						{showDashboard.value && (
-							<div class={style.dashboardArea}>
+							<div class={style.dashboardArea} style={{ pointerEvents: props.shouldHandleHover ? 'all' : undefined }}>
 								{dashboardType.value === 'convert' ? (
 									<>
-										<div class={style.linearGraphItems}>
+										<div class={style.linearGraphItems} onClick={() => showProgressInfo(props.task, props.id, 'progress')}>
 											<div class={style.linearGraphItem}>
 												<span class={style.data}>{ graphTime.value }</span>
 												<span class={style.description}>时间</span>
@@ -485,17 +489,17 @@ export const TaskItem = defineComponent((props: Props) => {
 												<span class={style.description}>帧</span>
 											</div>
 										</div>
-										<div class={style.roundGraphItem}>
+										<div class={style.roundGraphItem} onClick={() => showProgressInfo(props.task, props.id, 'bitrate')}>
 											<div class={style.ring} style={graphBitrateStyle.value}></div>
 											<span class={style.data}>{ graphBitrate.value }</span>
 											<span class={style.description}>码率</span>
 										</div>
-										<div class={style.roundGraphItem}>
+										<div class={style.roundGraphItem} onClick={() => showProgressInfo(props.task, props.id, 'speed')}>
 											<div class={style.ring} style={graphSpeedStyle.value}></div>
 											<span class={style.data}>{ graphSpeed.value }</span>
 											<span class={style.description}>速度</span>
 										</div>
-										<div class={style.textItem}>
+										<div class={style.textItem} onClick={() => showProgressInfo(props.task, props.id, 'size')}>
 											<span class={style.data}>{ graphSize.value }</span>
 											<span class={style.description}>输出大小</span>
 										</div>
@@ -513,11 +517,11 @@ export const TaskItem = defineComponent((props: Props) => {
 										</div>
 									</>
 								)}
-								<div class={style.textItem}>
+								<div class={style.textItem} onClick={() => showProgressInfo(props.task, props.id, 'progress')}>
 									<span class={style.data}>{ graphLeftTime.value }</span>
 									<span class={style.description}>预计剩余时间</span>
 								</div>
-								<div class={style.textItem}>
+								<div class={style.textItem} onClick={() => showProgressInfo(props.task, props.id, 'progress')}>
 									<span class={`${style.data} ${style.dataLarge}`}>{ overallProgress.value === 1 ? '🆗' : `${(overallProgress.value * 100).toFixed(1)}%` }</span>
 									<span class={style.description}>{ overallProgressDescription.value }</span>
 								</div>
