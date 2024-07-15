@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  ffbox:
+    image: nickhoo/ffbox
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 8080:80
+      - 33269:33269

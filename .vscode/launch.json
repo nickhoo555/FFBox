@@ -7,23 +7,11 @@
       "request": "launch",
       "cwd": "${workspaceRoot}",
       "runtimeExecutable": "node",
-      // "windows": {
-      //   "runtimeExecutable": "npm.cmd"
-      // },
-      // "runtimeArgs": ["run", "dev:backend"],
-      // "outputCapture": "std",
-      // "serverReadyAction": {
-      //   "pattern": "Local:   http://127.0.0.1:([0-9]+)",
-      //   "uriFormat": "http://localhost:%s",
-      //   "action": "openExternally"
-      // },
       "program": "${workspaceFolder}/src/backend/index.ts",
-      "outFiles": ["${workspaceFolder}/app/backend/**/*.cjs"],
-      // "skipFiles": [
-      //     "<node_internals>/**"
-      // ],
-      // "timeout": 60000,
-      "preLaunchTask": "编译后端（dev）",
+      "outFiles": [
+        "${workspaceFolder}/app/backend/**/*.cjs"
+      ],
+      "preLaunchTask": "编译后端（dev）"
     },
     {
       "name": "编译调试后端 (webpack)",
@@ -31,14 +19,23 @@
       "request": "launch",
       "cwd": "${workspaceRoot}",
       "program": "${workspaceFolder}/src/backend/index.ts",
-      "outFiles": ["${workspaceFolder}/app/backend/**/*.js"],
-      "preLaunchTask": "启动 webpack:backend 脚本 (dev)",
+      "outFiles": [
+        "${workspaceFolder}/app/backend/**/*.js"
+      ],
+      "preLaunchTask": "启动 webpack:backend 脚本 (dev)"
     },
     {
       "name": "插入调试后端",
       "type": "node",
       "request": "attach",
-      "port": 9229,
+      "port": 9229
+    },
+    {
+      "name": "Docker Node.js Launch",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "platform": "node"
     }
   ]
 }
