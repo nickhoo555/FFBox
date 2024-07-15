@@ -1,5 +1,5 @@
 # 使用 Debian 作为基础镜像
-FROM debian:bullseye-slim
+FROM linuxserver/ffmpeg
 
 # 安装 Nginx 和其他必要的包
 RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
