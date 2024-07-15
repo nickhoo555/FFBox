@@ -6,6 +6,7 @@ FROM nginx:alpine
 RUN mkdir /app
 # 复制后端文件
 COPY docker/be/service /app/service
+RUN chmod +x /app/service
 
 # 复制Nginx配置文件
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
