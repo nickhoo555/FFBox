@@ -1,8 +1,10 @@
 # 使用 Debian 作为基础镜像
-FROM linuxserver/ffmpeg
+FROM debian:bullseye-slim
 
-# 安装 Nginx 和其他必要的包
-RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
+# 安装 Nginx、FFmpeg 和其他必要的包
+RUN apt-get update && \
+    apt-get install -y nginx ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /app
