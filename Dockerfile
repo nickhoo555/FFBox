@@ -2,10 +2,10 @@
 FROM nginx:alpine
 
 # 设置工作目录
-WORKDIR /app
-
+# WORKDIR /app
+RUN mkdir /app
 # 复制后端文件
-COPY docker/be/service ./
+COPY docker/be/service /app/service
 
 # 复制Nginx配置文件
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
