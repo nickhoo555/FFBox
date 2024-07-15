@@ -14,7 +14,8 @@ COPY docker/be/service /app
 RUN chmod +x /app/service
 
 # 复制前端文件到 Nginx 默认的静态文件目录
-COPY docker/fe /usr/share/nginx/html
+COPY docker/fe /var/www/html
+#/usr/share/nginx/html
 
 # 复制 Nginx 配置
 # COPY docker/nginx.conf /etc/nginx/conf.d/
