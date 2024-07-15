@@ -17,7 +17,7 @@ RUN chmod +x /app/service
 COPY docker/fe /var/www/html
 
 # 复制 Nginx 配置
-COPY docker/api_proxy.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # 删除默认的 Nginx 默认站点配置
 RUN rm /etc/nginx/sites-enabled/default
